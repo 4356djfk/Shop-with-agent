@@ -31,3 +31,9 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Runtime / local cache ###
+*.log
+*.pid
+*.err
+.m2/

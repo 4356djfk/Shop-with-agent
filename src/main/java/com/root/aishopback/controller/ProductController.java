@@ -1,0 +1,54 @@
+package com.root.aishopback.controller;
+
+import com.root.aishopback.common.ApiResponse;
+import com.root.aishopback.service.ShopProductService;
+import com.root.aishopback.vo.ProductVO;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/products")
+@CrossOrigin(origins = "*")
+public class ProductController {
+    private final ShopProductService shopProductService;
+
+    public ProductController(ShopProductService shopProductService) {
+        this.shopProductService = shopProductService;
+    }
+
+    @GetMapping
+    public ApiResponse<Map<String, Object>> list(
+        @RequestParam(required = false) String category,
+        @RequestParam(required = false) String keyword
+    ) {
+        List<ProductVO> list = shopProductService.listProducts(category, keyword);
+        Map<String, Object> data = new HashMap<>();
+        data.put("list", list);
+        data.put("total", list.size());
+        return ApiResponse.ok(data);
+    }
+
+    @GetMapping("/{id}")
+    public ApiResponse<ProductVO> detail(@PathVariable Long id) {
+        ProductVO detail = shopProductService.getProductDetail(id);
+        return ApiResponse.ok(detail);
+    }
+
+    @GetMapping("/search")
+    public ApiResponse<Map<String, Object>> search(@RequestParam String keyword) {
+        List<ProductVO> list = shopProductService.listProducts(null, keyword);
+        Map<String, Object> data = new HashMap<>();
+        data.put("list", list);
+        data.put("total", list.size());
+        return ApiResponse.ok(data);
+    }
+}
+

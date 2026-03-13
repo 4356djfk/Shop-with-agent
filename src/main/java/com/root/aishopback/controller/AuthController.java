@@ -1,74 +1,162 @@
 package com.root.aishopback.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.root.aishopback.entity.AppUser;
+import com.root.aishopback.mapper.AppUserMapper;
+import com.root.aishopback.service.AuthTokenService;
 import com.root.aishopback.service.MonitorClientManager;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.time.Duration;
 
 @RestController
 @RequestMapping("/api/auth")
 @CrossOrigin(origins = "*")
 public class AuthController {
 
-    @Autowired
-    private MonitorClientManager monitorClientManager;
+    private static AuthTokenService staticAuthTokenService;
+
+    private final MonitorClientManager monitorClientManager;
+    private final AppUserMapper appUserMapper;
+    private final AuthTokenService authTokenService;
+    private final long tokenTtlDays;
+
+    public AuthController(
+        MonitorClientManager monitorClientManager,
+        AppUserMapper appUserMapper,
+        AuthTokenService authTokenService,
+        @Value("${app.auth.token-ttl-days:7}") long tokenTtlDays
+    ) {
+        this.monitorClientManager = monitorClientManager;
+        this.appUserMapper = appUserMapper;
+        this.authTokenService = authTokenService;
+        this.tokenTtlDays = tokenTtlDays;
+        staticAuthTokenService = authTokenService;
+    }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> request) {
-        String username = request.get("username");
-        String password = request.get("password");
-
-        // Allow any username as long as password is 123456 for testing multiple clients
-        if ("123456".equals(password)) {
-            // Start the background monitor client thread for this mapped user
-            monitorClientManager.startClientForUser(username);
-
-            Map<String, Object> data = new HashMap<>();
-            data.put("token", UUID.randomUUID().toString());
-            
-            Map<String, Object> user = new HashMap<>();
-            user.put("id", 1);
-            user.put("username", username);
-            user.put("nickname", "测试用户");
-            user.put("avatar", "https://picsum.photos/seed/avatar/100/100");
-            user.put("email", "test@example.com");
-            data.put("user", user);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 200);
-            response.put("data", data);
-
-            return ResponseEntity.ok(response);
+        String username = safe(request.get("username"));
+        String password = safe(request.get("password"));
+        if (username.isBlank() || password.isBlank()) {
+            return ResponseEntity.status(400).body(Map.of("message", "Username and password are required"));
         }
 
-        return ResponseEntity.status(401).body(Map.of("message", "用户名或密码错误"));
+        AppUser dbUser = appUserMapper.selectOne(
+            new LambdaQueryWrapper<AppUser>().eq(AppUser::getUsername, username).last("LIMIT 1")
+        );
+        if (dbUser == null || dbUser.getPasswordHash() == null || !password.equals(dbUser.getPasswordHash())) {
+            return ResponseEntity.status(401).body(Map.of("message", "Invalid username or password"));
+        }
+
+        monitorClientManager.startClientForUser(username);
+        String token = UUID.randomUUID().toString();
+        authTokenService.saveToken(token, dbUser.getId(), Duration.ofDays(Math.max(1, tokenTtlDays)));
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("token", token);
+        data.put("user", Map.of(
+            "id", dbUser.getId(),
+            "username", dbUser.getUsername(),
+            "nickname", nullSafe(dbUser.getNickname(), dbUser.getUsername()),
+            "avatar", nullSafe(dbUser.getAvatarUrl(), "https://picsum.photos/seed/avatar/100/100"),
+            "email", nullSafe(dbUser.getEmail(), dbUser.getUsername() + "@example.com")
+        ));
+        return ResponseEntity.ok(Map.of("code", 200, "data", data));
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody Map<String, String> request) {
+        String username = safe(request.get("username"));
+        String password = safe(request.get("password"));
+        if (username.length() < 3 || password.length() < 6) {
+            return ResponseEntity.status(400).body(Map.of("message", "Invalid username or password length"));
+        }
+        AppUser exists = appUserMapper.selectOne(
+            new LambdaQueryWrapper<AppUser>().eq(AppUser::getUsername, username).last("LIMIT 1")
+        );
+        if (exists != null) {
+            return ResponseEntity.status(409).body(Map.of("message", "Username already exists"));
+        }
+
+        AppUser user = new AppUser();
+        user.setUsername(username);
+        user.setPasswordHash(password);
+        user.setNickname(nullSafe(request.get("nickname"), username));
+        user.setAvatarUrl("https://picsum.photos/seed/avatar/100/100");
+        user.setEmail(nullSafe(request.get("email"), username + "@example.com"));
+        user.setStatus("active");
+        appUserMapper.insert(user);
+        return ResponseEntity.ok(Map.of("code", 200, "data", Map.of("message", "Register success")));
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(@RequestBody Map<String, String> request) {
-        String username = request.get("username");
-        if (username != null) {
-            // Stop the background monitor client thread for this user
+    public ResponseEntity<?> logout(@RequestBody(required = false) Map<String, String> request, HttpServletRequest httpServletRequest) {
+        String username = request == null ? "" : safe(request.get("username"));
+        if (!username.isBlank()) {
             monitorClientManager.stopClientForUser(username);
         }
-        
-        return ResponseEntity.ok(Map.of("code", 200, "message", "退出成功"));
+        String token = resolveToken(httpServletRequest);
+        if (!token.isBlank()) {
+            authTokenService.removeToken(token);
+        }
+        return ResponseEntity.ok(Map.of("code", 200, "message", "Logout success"));
     }
-    
+
     @GetMapping("/me")
-    public ResponseEntity<?> getMe() {
-         return ResponseEntity.ok(Map.of(
-             "code", 200, 
-             "data", Map.of(
-                 "id", 1, 
-                 "username", "test", 
-                 "nickname", "测试用户", 
-                 "avatar", "https://picsum.photos/seed/avatar/100/100"
-             )
-         ));
+    public ResponseEntity<?> getMe(HttpServletRequest request) {
+        String token = resolveToken(request);
+        Long userId = authTokenService.getUserIdByToken(token);
+        if (userId == null) {
+            return ResponseEntity.status(401).body(Map.of("message", "Unauthorized"));
+        }
+        AppUser user = appUserMapper.selectById(userId);
+        if (user == null) {
+            return ResponseEntity.status(401).body(Map.of("message", "Unauthorized"));
+        }
+        return ResponseEntity.ok(Map.of(
+            "code", 200,
+            "data", Map.of(
+                "id", user.getId(),
+                "username", user.getUsername(),
+                "nickname", nullSafe(user.getNickname(), user.getUsername()),
+                "avatar", nullSafe(user.getAvatarUrl(), "https://picsum.photos/seed/avatar/100/100"),
+                "email", nullSafe(user.getEmail(), user.getUsername() + "@example.com")
+            )
+        ));
+    }
+
+    public static Long resolveUserIdByToken(String token) {
+        if (token == null || token.isBlank()) return null;
+        if (staticAuthTokenService == null) return null;
+        return staticAuthTokenService.getUserIdByToken(token);
+    }
+
+    private String resolveToken(HttpServletRequest request) {
+        String auth = request.getHeader("Authorization");
+        if (auth == null) return "";
+        if (auth.startsWith("Bearer ")) {
+            return auth.substring(7).trim();
+        }
+        return "";
+    }
+
+    private String safe(String value) {
+        return value == null ? "" : value.trim();
+    }
+
+    private String nullSafe(String value, String fallback) {
+        return value == null || value.isBlank() ? fallback : value;
     }
 }
