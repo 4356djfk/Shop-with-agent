@@ -1,6 +1,8 @@
 package com.root.aishopback.runner;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -8,17 +10,22 @@ import java.io.File;
 
 @Component
 @Order(100)
+@ConditionalOnProperty(prefix = "app.frontend", name = "auto-start", havingValue = "true")
 public class FrontendAutoStarter implements CommandLineRunner {
 
-    private static final String FRONTEND_DIR = "e:\\Code\\Vue\\b\\detect-end";
+    private final String frontendDirPath;
+
+    public FrontendAutoStarter(@Value("${app.frontend.dir:e:\\\\Code\\\\Vue\\\\b\\\\detect-end}") String frontendDirPath) {
+        this.frontendDirPath = frontendDirPath;
+    }
 
     @Override
     public void run(String... args) throws Exception {
         System.out.println("Starting frontend automatic execution...");
 
-        File frontendDir = new File(FRONTEND_DIR);
+        File frontendDir = new File(frontendDirPath);
         if (!frontendDir.exists() || !frontendDir.isDirectory()) {
-            System.err.println("Frontend directory not found at: " + FRONTEND_DIR);
+            System.err.println("Frontend directory not found at: " + frontendDirPath);
             return;
         }
 

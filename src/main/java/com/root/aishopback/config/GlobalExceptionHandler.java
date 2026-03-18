@@ -25,8 +25,10 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleAny(Exception ex) {
+        // Keep internal details in server logs only.
+        ex.printStackTrace();
         return ResponseEntity
             .status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body(new ApiResponse<>(500, null, ex.getMessage()));
+            .body(new ApiResponse<>(500, null, "服务器内部错误"));
     }
 }

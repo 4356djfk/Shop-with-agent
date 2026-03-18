@@ -1,0 +1,112 @@
+[
+  {
+    "name": "quilt_preference_switch",
+    "user_id": 9301,
+    "turns": [
+      {
+        "input": "recommend comforter",
+        "expect_non_empty_products": true,
+        "expect_products_contain_any": ["comforter", "quilt", "duvet", "bedding"]
+      },
+      {
+        "input": "warmer and thicker",
+        "context_turn": true,
+        "expect_non_empty_products": true,
+        "expect_products_contain_any": ["comforter", "quilt", "duvet", "bedding"],
+        "expect_reply_not_contains_any": ["i can check rating sales stock price"]
+      },
+      {
+        "input": "lighter and breathable",
+        "context_turn": true,
+        "expect_non_empty_products": true,
+        "expect_products_contain_any": ["comforter", "quilt", "duvet", "bedding"]
+      }
+    ]
+  },
+  {
+    "name": "quilt_only_not_set",
+    "user_id": 9302,
+    "turns": [
+      {
+        "input": "i want to buy quilt",
+        "expect_non_empty_products": true,
+        "expect_products_contain_any": ["comforter", "quilt", "duvet", "bedding"]
+      },
+      {
+        "input": "only quilt, no set",
+        "context_turn": true,
+        "expect_non_empty_products": true,
+        "expect_reply_not_contains_any": ["i can check rating sales stock price"]
+      }
+    ]
+  },
+  {
+    "name": "lamp_context_choose",
+    "user_id": 9303,
+    "turns": [
+      {
+        "input": "recommend desk lamp",
+        "expect_non_empty_products": true,
+        "expect_products_contain_any": ["lamp", "light", "led"]
+      },
+      {
+        "input": "warmer light",
+        "context_turn": true,
+        "expect_non_empty_products": true,
+        "expect_products_contain_any": ["lamp", "light", "led"]
+      },
+      {
+        "input": "which one do you recommend",
+        "context_turn": true,
+        "expect_non_empty_products": true,
+        "expect_products_contain_any": ["lamp", "light", "led"]
+      }
+    ]
+  },
+  {
+    "name": "mouse_no_drift",
+    "user_id": 9304,
+    "turns": [
+      {
+        "input": "i want a mouse",
+        "expect_non_empty_products": true,
+        "expect_products_contain_any": ["mouse"],
+        "expect_products_not_contain_any": ["desk mat", "mouse pad", "keyboard cover"]
+      },
+      {
+        "input": "more?",
+        "context_turn": true,
+        "expect_non_empty_products": true,
+        "expect_products_contain_any": ["mouse"]
+      }
+    ]
+  },
+  {
+    "name": "ambiguity_guidance_without_context",
+    "user_id": 9305,
+    "turns": [
+      {
+        "input": "which has highest rating",
+        "expect_guidance": true,
+        "expect_reply_contains_any": ["need", "first", "recommend", "context"]
+      }
+    ]
+  },
+  {
+    "name": "intent_switch_from_headphone_to_quilt",
+    "user_id": 9306,
+    "turns": [
+      {
+        "input": "recommend headphones",
+        "expect_non_empty_products": true,
+        "expect_products_contain_any": ["headphone", "earbud", "headset"]
+      },
+      {
+        "input": "i want to buy comforter",
+        "expect_non_empty_products": true,
+        "expect_products_contain_any": ["comforter", "quilt", "duvet", "bedding"],
+        "expect_products_not_contain_any": ["headphone", "earbud", "headset"]
+      }
+    ]
+  }
+]

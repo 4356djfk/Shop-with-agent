@@ -3,6 +3,7 @@ package com.root.aishopback.service;
 import com.root.aishopback.netty.client.NettyMonitorClient;
 import com.alibaba.fastjson2.JSON;
 import com.root.aishopback.websocket.MonitorWebSocketHandler;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -14,6 +15,11 @@ public class MonitorClientManager {
 
     // Maps username to their dedicated monitor client thread runner
     private final Map<String, NettyMonitorClient> clientMap = new ConcurrentHashMap<>();
+    private final String monitorSharedSecret;
+
+    public MonitorClientManager(@Value("${app.monitor.shared-secret:change-me-dev-secret}") String monitorSharedSecret) {
+        this.monitorSharedSecret = monitorSharedSecret;
+    }
 
     /**
      * Spawns a new Netty monitor client for the given account if one doesn't exist.
@@ -24,7 +30,7 @@ public class MonitorClientManager {
             return;
         }
         
-        NettyMonitorClient client = new NettyMonitorClient(account);
+        NettyMonitorClient client = new NettyMonitorClient(account, monitorSharedSecret);
         clientMap.put(account, client);
         
         Thread clientThread = new Thread(client);

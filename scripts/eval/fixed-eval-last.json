@@ -1,0 +1,233 @@
+﻿{
+    "summary":  {
+                    "generated_at":  "2026-03-16T16:35:13",
+                    "base_url":  "http://127.0.0.1:8080",
+                    "top_k":  4,
+                    "total_cases":  31,
+                    "total_returned":  101,
+                    "total_relevant":  85,
+                    "top1_intent_proxy_percent":  83.87,
+                    "topk_relevance_percent":  84.16,
+                    "irrelevant_percent":  15.84,
+                    "empty_query_percent":  0
+                },
+    "details":  [
+                    {
+                        "query":  "mouse",
+                        "returned":  2,
+                        "relevant":  2,
+                        "top1_hit":  true,
+                        "top1_name":  "Razer DeathAdder V 2 æ¸¸æé¼ æ ï¼20 K DPI å\u0085å­¦ä¼ æå¨ - æå¿«çæ¸¸æé¼ æ å¼å\u0085³ - Chroma RGB ç¯å\u0085 - 8 ä¸ªå¯ç¼ç¨æé® - äººä½å·¥å­¦å½¢ç¶ - Halo Infinite ç"
+                    },
+                    {
+                        "query":  "gaming mouse",
+                        "returned":  2,
+                        "relevant":  2,
+                        "top1_hit":  true,
+                        "top1_name":  "Razer DeathAdder V 2 æ¸¸æé¼ æ ï¼20 K DPI å\u0085å­¦ä¼ æå¨ - æå¿«çæ¸¸æé¼ æ å¼å\u0085³ - Chroma RGB ç¯å\u0085 - 8 ä¸ªå¯ç¼ç¨æé® - äººä½å·¥å­¦å½¢ç¶ - Halo Infinite ç"
+                    },
+                    {
+                        "query":  "wireless mouse",
+                        "returned":  2,
+                        "relevant":  2,
+                        "top1_hit":  true,
+                        "top1_name":  "Razer DeathAdder V 2 æ¸¸æé¼ æ ï¼20 K DPI å\u0085å­¦ä¼ æå¨ - æå¿«çæ¸¸æé¼ æ å¼å\u0085³ - Chroma RGB ç¯å\u0085 - 8 ä¸ªå¯ç¼ç¨æé® - äººä½å·¥å­¦å½¢ç¶ - Halo Infinite ç"
+                    },
+                    {
+                        "query":  "keyboard",
+                        "returned":  1,
+                        "relevant":  1,
+                        "top1_hit":  true,
+                        "top1_name":  "R-Go åä½å¼äººä½å·¥å­¦é®çï¼QWERTYï¼ç¾å½ï¼ï¼é»è²ï¼æçº¿ USB é®çï¼QWERTYï¼ç¾å½ï¼/åä½å¼ï¼æçº¿/WindowsãLinuxï¼"
+                    },
+                    {
+                        "query":  "mechanical keyboard",
+                        "returned":  1,
+                        "relevant":  1,
+                        "top1_hit":  true,
+                        "top1_name":  "R-Go åä½å¼äººä½å·¥å­¦é®çï¼QWERTYï¼ç¾å½ï¼ï¼é»è²ï¼æçº¿ USB é®çï¼QWERTYï¼ç¾å½ï¼/åä½å¼ï¼æçº¿/WindowsãLinuxï¼"
+                    },
+                    {
+                        "query":  "wireless keyboard",
+                        "returned":  1,
+                        "relevant":  1,
+                        "top1_hit":  true,
+                        "top1_name":  "R-Go åä½å¼äººä½å·¥å­¦é®çï¼QWERTYï¼ç¾å½ï¼ï¼é»è²ï¼æçº¿ USB é®çï¼QWERTYï¼ç¾å½ï¼/åä½å¼ï¼æçº¿/WindowsãLinuxï¼"
+                    },
+                    {
+                        "query":  "headphone",
+                        "returned":  3,
+                        "relevant":  3,
+                        "top1_hit":  true,
+                        "top1_name":  "Razer Kraken é¦æ èµç THX 7.1 ç¯ç»å£°æ¸¸æè³æºï¼å¯ä¼¸ç¼©éåªéº¦å\u0085é£ - USB DAC - éç¨äº PCãPS 4ãPS 5ãNintendo SwitchãXbox OneãXbox Series X å Sãç§»å¨è®¾å¤ - é»è²"
+                    },
+                    {
+                        "query":  "bluetooth earbuds",
+                        "returned":  3,
+                        "relevant":  3,
+                        "top1_hit":  true,
+                        "top1_name":  "Razer Kraken é¦æ èµç THX 7.1 ç¯ç»å£°æ¸¸æè³æºï¼å¯ä¼¸ç¼©éåªéº¦å\u0085é£ - USB DAC - éç¨äº PCãPS 4ãPS 5ãNintendo SwitchãXbox OneãXbox Series X å Sãç§»å¨è®¾å¤ - é»è²"
+                    },
+                    {
+                        "query":  "gaming headset",
+                        "returned":  3,
+                        "relevant":  3,
+                        "top1_hit":  true,
+                        "top1_name":  "Razer Kraken é¦æ èµç THX 7.1 ç¯ç»å£°æ¸¸æè³æºï¼å¯ä¼¸ç¼©éåªéº¦å\u0085é£ - USB DAC - éç¨äº PCãPS 4ãPS 5ãNintendo SwitchãXbox OneãXbox Series X å Sãç§»å¨è®¾å¤ - é»è²"
+                    },
+                    {
+                        "query":  "running shoes",
+                        "returned":  4,
+                        "relevant":  4,
+                        "top1_hit":  true,
+                        "top1_name":  "Dr. Scholl\u0027s Shoes å¥³å¼ Whoa ä¹ç¦é"
+                    },
+                    {
+                        "query":  "sneakers",
+                        "returned":  4,
+                        "relevant":  4,
+                        "top1_hit":  true,
+                        "top1_name":  "Under Armour ç·å£« Charged Assert 9 è·é"
+                    },
+                    {
+                        "query":  "backpack",
+                        "returned":  4,
+                        "relevant":  2,
+                        "top1_hit":  true,
+                        "top1_name":  "Modoker å¯è½¬æ¢æè£\u0085å\u0085å¸¦æ´æ¼±å\u0085ï¼ç·å£«å¥³å£«æ\u0085è¡éèº«æè£\u0085è¡æè¢ï¼å¤åè½è¥¿è£\u0085å\u0085 2 å 1 æ¬æå¼è¡æç®±ï¼é»è²"
+                    },
+                    {
+                        "query":  "travel bag",
+                        "returned":  4,
+                        "relevant":  4,
+                        "top1_hit":  true,
+                        "top1_name":  "World Traveler 22 è±å¯¸è¡æè¢ï¼ç²è²é¥°è¾¹æé©¬çº¹ï¼ä¸ç§å°ºå¯¸"
+                    },
+                    {
+                        "query":  "desk lamp",
+                        "returned":  4,
+                        "relevant":  4,
+                        "top1_hit":  true,
+                        "top1_name":  "Ensenior 16 ä»¶è£\u0085 6 è±å¯¸è¶\u0085è LED åµå\u0085¥å¼å¸é¡¶ç¯ï¼å¸¦æ¥çº¿çï¼5000 K æ¥å\u0085ï¼12 W 110 W Eqvï¼å¯è°å\u0085 Can-Killer ç­ç¯ï¼1050 lm é«äº®åº¦ - ETL åè½æºä¹æè®¤è¯"
+                    },
+                    {
+                        "query":  "night light",
+                        "returned":  4,
+                        "relevant":  4,
+                        "top1_hit":  true,
+                        "top1_name":  "SLEEKLIGHTING E 26 æ åèºå£åºåº§ 13 ç¦ CFL ç¯æ³¡ - 3 ä»¶è£\u0085ï¼5000 å¼å°æï¼éç¨äºçº¯ç½æ¥å\u0085ï¼800 æµæï¼ç¸å½äº 65 ç¦ç½ç½ç¯æ³¡ï¼- UL è®¤è¯"
+                    },
+                    {
+                        "query":  "bicycle",
+                        "returned":  4,
+                        "relevant":  3,
+                        "top1_hit":  false,
+                        "top1_name":  "Vans ç·å¥³éç¨ Old Skool ç»å\u0085¸æ»æ¿é"
+                    },
+                    {
+                        "query":  "mountain bike",
+                        "returned":  4,
+                        "relevant":  4,
+                        "top1_hit":  true,
+                        "top1_name":  "Vans ç·å¥³éç¨ Old Skool ç»å\u0085¸æ»æ¿é"
+                    },
+                    {
+                        "query":  "laptop computer",
+                        "returned":  4,
+                        "relevant":  4,
+                        "top1_hit":  true,
+                        "top1_name":  "LETTON ç«ç°éå¯è°è Laptop Stand for Deskï¼ä¾¿æºå¼ç¬è®°æ¬çµèæ¯æ¶ï¼éå¶å¯æå çµèæ¯æ¶ï¼ç¬¦åäººä½å·¥ç¨å­¦ççµèç¬è®°æ¬çµèæ¯æ¶éç¨äºå¹³æ¿çµèç¬è®°æ¬çµèçæ¡é¢æç"
+                    },
+                    {
+                        "query":  "desktop pc",
+                        "returned":  4,
+                        "relevant":  4,
+                        "top1_hit":  true,
+                        "top1_name":  "VersionTECH. æçº¿æ¸¸æé¼ æ ï¼ç¬¦åäººä½å·¥ç¨å­¦ç USB å\u0085çµé¼ æ ï¼å¸¦ Chroma RGB èå\u0085ï¼1200 è³ 3600 DPIï¼éç¨äºç¬è®°æ¬çµèæ¸¸æåå·¥ä½ - ç½è²"
+                    },
+                    {
+                        "query":  "pet supplies",
+                        "returned":  4,
+                        "relevant":  4,
+                        "top1_hit":  true,
+                        "top1_name":  "Precision Pet Products ä¸¤é¨ Provalue é¢ä¸çç¬¼ï¼30 è±å¯¸ï¼éå 30-50 ç£\u0085çå® ç©"
+                    },
+                    {
+                        "query":  "dog food",
+                        "returned":  4,
+                        "relevant":  4,
+                        "top1_hit":  true,
+                        "top1_name":  "BRINDLE é²æ°´è®°å¿æµ·ç»µå® ç©åº - å¯æå¸ãå¯æ¸\u0085æ´ - 4 è±å¯¸ç«å½¢çåç«åº - éåå¤§å¤æ°æ¿æ¡ç®±"
+                    },
+                    {
+                        "query":  "baby stroller",
+                        "returned":  4,
+                        "relevant":  4,
+                        "top1_hit":  true,
+                        "top1_name":  "Sweet Acorn éç»å©´å¿æ¯¯ - ææºæ£å©´å¿åå¹¼å¿æ¶çº³æ¯¯ï¼éåå¥³å­©åç·å­©ï¼ - æè½¯éç»å©´å¿è½¦/çæ¯¯ - å ä½å¾æ¡ - é¾ç°è²"
+                    },
+                    {
+                        "query":  "infant",
+                        "returned":  4,
+                        "relevant":  3,
+                        "top1_hit":  true,
+                        "top1_name":  "KIM S è±æµè\u0085°å¸¦å­å¦è¶\u0085é¿è¿è¡£è£ï¼S-3 XLï¼/å\u0085è£¹å¼è¤¶ç± V é¢æç\u0085§å©´å¿éç¤¼ä¼è¿è¡£è£"
+                    },
+                    {
+                        "query":  "book novel",
+                        "returned":  4,
+                        "relevant":  4,
+                        "top1_hit":  true,
+                        "top1_name":  "GPX PC 332 B ä¾¿æºå¼ CD æ­æ¾å¨ï¼å¸¦é²è·³ä¿æ¤ãFM æ¶é³æºåç«ä½å£°è³å¡ - é»è²"
+                    },
+                    {
+                        "query":  "textbook",
+                        "returned":  4,
+                        "relevant":  0,
+                        "top1_hit":  false,
+                        "top1_name":  "GPX PC 332 B ä¾¿æºå¼ CD æ­æ¾å¨ï¼å¸¦é²è·³ä¿æ¤ãFM æ¶é³æºåç«ä½å£°è³å¡ - é»è²"
+                    },
+                    {
+                        "query":  "toy puzzle",
+                        "returned":  4,
+                        "relevant":  4,
+                        "top1_hit":  true,
+                        "top1_name":  "Heroes of Goo Jit Zu Water Blast Versus Pack-2 ä¸ªå¯å¨äººå¶å\u0085ï¼å\u0085æ¬ç¬å®¶éè²äººå¶ãBlazagon Vs Rockjaw"
+                    },
+                    {
+                        "query":  "children toys",
+                        "returned":  2,
+                        "relevant":  1,
+                        "top1_hit":  true,
+                        "top1_name":  "äºåå\u0085æ¯å¨æµ´ç¼¸éæ¦åé¡» å¿ç«¥æ²æµ´æ´»å¨"
+                    },
+                    {
+                        "query":  "makeup lipstick",
+                        "returned":  4,
+                        "relevant":  4,
+                        "top1_hit":  true,
+                        "top1_name":  "D.B.Z. Makeup Pro Hd Palette Amplified 35 - ä¸­æ§å·è²ï¼å¤è²é«è²ç´ ï¼å¤è²ï¼"
+                    },
+                    {
+                        "query":  "cosmetic",
+                        "returned":  4,
+                        "relevant":  0,
+                        "top1_hit":  false,
+                        "top1_name":  "Physicians Formula Murumuru é»æ²¹å¤éè²|å¥¶æ²¹å¾®å\u0085å½©å¦|æµ\u0085å¤éè²"
+                    },
+                    {
+                        "query":  "home daily supplies",
+                        "returned":  4,
+                        "relevant":  2,
+                        "top1_hit":  false,
+                        "top1_name":  "16 ä»¶è£\u0085æ¶å­å\u0085è¡¬å« EVA å°ç®±å«å\u0085è¡¬å¯æ¸\u0085æ´å°ç®±çå«å\u0085è¡¬ç»çæ¶å­æ©±ææ½å±æ¡é¤å«å°ç®±é\u0085ä»¶ï¼5 ç§é¢è²æ··è£\u0085ï¼"
+                    },
+                    {
+                        "query":  "kitchen storage",
+                        "returned":  1,
+                        "relevant":  0,
+                        "top1_hit":  false,
+                        "top1_name":  "MyGift å¤å¤ç°æ¨ç¬ç«å¼é\u0085æ¶ï¼8 ä¸ªç¶æ¶å­å¨åæ¶çº³çï¼å¸¦å ä½è®¾è®¡ï¼åç´ææ°´å¹³å±ç¤ºæ¶"
+                    }
+                ]
+}

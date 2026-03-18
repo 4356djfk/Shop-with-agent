@@ -1,0 +1,46 @@
+[
+  { "query": "mouse", "expected_keywords": ["mouse", "\u9f20\u6807"] },
+  { "query": "gaming mouse", "expected_keywords": ["mouse", "\u9f20\u6807"] },
+  { "query": "wireless mouse", "expected_keywords": ["mouse", "\u9f20\u6807"] },
+
+  { "query": "keyboard", "expected_keywords": ["keyboard", "\u952e\u76d8"] },
+  { "query": "mechanical keyboard", "expected_keywords": ["keyboard", "\u952e\u76d8"] },
+  { "query": "wireless keyboard", "expected_keywords": ["keyboard", "\u952e\u76d8"] },
+
+  { "query": "headphone", "expected_keywords": ["headphone", "earphone", "earbud", "headset", "\u8033\u673a"] },
+  { "query": "bluetooth earbuds", "expected_keywords": ["headphone", "earphone", "earbud", "headset", "\u8033\u673a"] },
+  { "query": "gaming headset", "expected_keywords": ["headphone", "earphone", "earbud", "headset", "\u8033\u673a"] },
+
+  { "query": "running shoes", "expected_keywords": ["shoe", "sneaker", "boot", "sandal", "\u978b"] },
+  { "query": "sneakers", "expected_keywords": ["shoe", "sneaker", "boot", "sandal", "\u978b"] },
+
+  { "query": "backpack", "expected_keywords": ["bag", "backpack", "handbag", "luggage", "tote", "\u80cc\u5305"] },
+  { "query": "travel bag", "expected_keywords": ["bag", "backpack", "handbag", "luggage", "tote", "\u5305"] },
+
+  { "query": "desk lamp", "expected_keywords": ["lamp", "light", "lighting", "bulb", "led", "\u706f"] },
+  { "query": "night light", "expected_keywords": ["lamp", "light", "lighting", "bulb", "led", "\u7167\u660e"] },
+
+  { "query": "bicycle", "expected_keywords": ["bicycle", "bike", "cycling", "mtb", "bmx", "\u81ea\u884c\u8f66"] },
+  { "query": "mountain bike", "expected_keywords": ["bicycle", "bike", "cycling", "mtb", "bmx", "\u9a91\u884c"] },
+
+  { "query": "laptop computer", "expected_keywords": ["computer", "laptop", "notebook", "desktop", "macbook", "\u7535\u8111"] },
+  { "query": "desktop pc", "expected_keywords": ["computer", "laptop", "notebook", "desktop", "macbook", "\u7b14\u8bb0\u672c"] },
+
+  { "query": "pet supplies", "expected_keywords": ["pet", "dog", "cat", "\u5ba0\u7269"] },
+  { "query": "dog food", "expected_keywords": ["pet", "dog", "cat", "\u72d7"] },
+
+  { "query": "baby stroller", "expected_keywords": ["baby", "infant", "newborn", "stroller", "diaper", "toddler", "\u6bcd\u5a74"] },
+  { "query": "infant", "expected_keywords": ["baby", "infant", "newborn", "stroller", "diaper", "toddler", "\u5a74\u513f"] },
+
+  { "query": "book novel", "expected_keywords": ["book", "books", "novel", "textbook", "literature", "kindle", "\u56fe\u4e66"] },
+  { "query": "textbook", "expected_keywords": ["book", "books", "novel", "textbook", "literature", "kindle", "\u5c0f\u8bf4"] },
+
+  { "query": "toy puzzle", "expected_keywords": ["toy", "lego", "puzzle", "doll", "board game", "\u73a9\u5177"] },
+  { "query": "children toys", "expected_keywords": ["toy", "lego", "puzzle", "doll", "board game", "\u79ef\u6728"] },
+
+  { "query": "makeup lipstick", "expected_keywords": ["makeup", "cosmetic", "lipstick", "foundation", "eyeliner", "serum", "\u7f8e\u5986"] },
+  { "query": "cosmetic", "expected_keywords": ["makeup", "cosmetic", "lipstick", "foundation", "eyeliner", "serum", "\u53e3\u7ea2"] },
+
+  { "query": "home daily supplies", "expected_keywords": ["home", "household", "daily", "kitchen", "bathroom", "storage", "cleaning", "\u5bb6\u5c45"] },
+  { "query": "kitchen storage", "expected_keywords": ["home", "household", "daily", "kitchen", "bathroom", "storage", "cleaning", "\u65e5\u7528"] }
+]

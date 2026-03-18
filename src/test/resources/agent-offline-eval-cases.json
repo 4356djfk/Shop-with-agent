@@ -1,0 +1,65 @@
+[
+  {
+    "name": "shoe_topic_followup",
+    "userId": 9001,
+    "turns": [
+      { "input": "推荐鞋子", "expectNonEmpty": true, "expectAllProductNamesContain": ["鞋"] },
+      { "input": "日常穿的", "expectNonEmpty": true, "expectAllProductNamesContain": ["鞋"] },
+      { "input": "那你给我推荐一个", "expectNonEmpty": true, "expectAllProductNamesContain": ["鞋"] }
+    ]
+  },
+  {
+    "name": "headphone_no_drift",
+    "userId": 9002,
+    "turns": [
+      { "input": "降噪好的耳机", "expectNonEmpty": true, "expectAllProductNamesContainAny": ["耳机", "headphone", "earbud", "headset"] },
+      { "input": "还有吗", "expectNonEmpty": true, "expectAllProductNamesContainAny": ["耳机", "headphone", "earbud", "headset"] }
+    ]
+  },
+  {
+    "name": "compare_without_context_guard",
+    "userId": 9003,
+    "turns": [
+      { "input": "哪个评分最高", "expectReplyContains": ["先有一批商品"], "expectEmptyProducts": true }
+    ]
+  },
+  {
+    "name": "compare_within_batch",
+    "userId": 9004,
+    "turns": [
+      { "input": "推荐耳机", "expectNonEmpty": true, "expectAllProductNamesContainAny": ["耳机", "headphone", "earbud", "headset"] },
+      { "input": "哪个更便宜", "expectNonEmpty": true, "expectReplyContainsAny": ["价格最低", "最优"], "expectAllProductNamesContainAny": ["耳机", "headphone", "earbud", "headset"] }
+    ]
+  },
+  {
+    "name": "intent_switch_cut",
+    "userId": 9005,
+    "turns": [
+      { "input": "推荐耳机", "expectNonEmpty": true, "expectAllProductNamesContainAny": ["耳机", "headphone", "earbud", "headset"] },
+      { "input": "不要耳机，推荐手机", "expectNonEmpty": true, "expectAllProductNamesContain": ["手机"] }
+    ]
+  },
+  {
+    "name": "recommend_one_after_batch",
+    "userId": 9006,
+    "turns": [
+      { "input": "推荐耳机", "expectNonEmpty": true, "expectAllProductNamesContainAny": ["耳机", "headphone", "earbud", "headset"] },
+      { "input": "给我推荐一个", "expectNonEmpty": true, "expectAllProductNamesContainAny": ["耳机", "headphone", "earbud", "headset"] }
+    ]
+  },
+  {
+    "name": "bag_query",
+    "userId": 9007,
+    "turns": [
+      { "input": "推荐包", "expectNonEmpty": true, "expectAllProductNamesContainAny": ["包", "bag", "backpack", "handbag"] }
+    ]
+  },
+  {
+    "name": "phone_query",
+    "userId": 9008,
+    "turns": [
+      { "input": "推荐手机", "expectNonEmpty": true, "expectAllProductNamesContain": ["手机"] }
+    ]
+  }
+]
+

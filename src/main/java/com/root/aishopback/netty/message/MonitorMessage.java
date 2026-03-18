@@ -15,6 +15,8 @@ public class MonitorMessage {
     
     // IP Address
     private String ip;
+    private long timestamp;
+    private String signature;
 
     public MonitorMessage() {
     }
@@ -82,12 +84,30 @@ public class MonitorMessage {
         this.ip = ip;
     }
 
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public String getSignature() {
+        return signature;
+    }
+
+    public void setSignature(String signature) {
+        this.signature = signature;
+    }
+
     @Override
     public String toString() {
         return "MonitorMessage{" +
                 "type='" + type + '\'' +
                 ", account='" + account + '\'' +
                 ", ip='" + ip + '\'' +
+                ", timestamp=" + timestamp +
+                ", signature='" + signature + '\'' +
                 ", cpuUsage=" + cpuUsage +
                 ", memoryUsage=" + memoryUsage +
                 ", diskUsage=" + diskUsage +

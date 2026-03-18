@@ -13,9 +13,11 @@ import java.util.concurrent.TimeUnit;
 public class MonitorClientInitializer extends ChannelInitializer<SocketChannel> {
 
     private final String account;
+    private final String sharedSecret;
 
-    public MonitorClientInitializer(String account) {
+    public MonitorClientInitializer(String account, String sharedSecret) {
         this.account = account;
+        this.sharedSecret = sharedSecret;
     }
 
     @Override
@@ -33,6 +35,6 @@ public class MonitorClientInitializer extends ChannelInitializer<SocketChannel> 
         pipeline.addLast(new StringEncoder());
 
         // Custom client business logic handler
-        pipeline.addLast(new MonitorClientHandler(account));
+        pipeline.addLast(new MonitorClientHandler(account, sharedSecret));
     }
 }

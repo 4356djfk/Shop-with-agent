@@ -1,0 +1,154 @@
+﻿{
+    "summary":  {
+                    "generated_at":  "2026-03-16T21:41:50",
+                    "base_url":  "http://127.0.0.1:8080",
+                    "top_k":  4,
+                    "total_turns":  13,
+                    "passed_turns":  3,
+                    "pass_rate_percent":  23.08,
+                    "intent_accuracy_proxy_percent":  27.27,
+                    "context_inheritance_accuracy_percent":  33.33,
+                    "ambiguity_guidance_hit_percent":  0
+                },
+    "details":  [
+                    {
+                        "session":  "quilt_preference_switch",
+                        "input":  "recommend comforter",
+                        "pass":  false,
+                        "returned":  0,
+                        "top1":  "",
+                        "reasons":  [
+                                        "expected non-empty products",
+                                        "products not matched expected keywords"
+                                    ]
+                    },
+                    {
+                        "session":  "quilt_preference_switch",
+                        "input":  "warmer and thicker",
+                        "pass":  false,
+                        "returned":  4,
+                        "top1":  "VELCRO Brand-91302 å¸¦ç²ååçèéæç¹ | 75 è®¡æ° | 5/8 è±å¯¸åå½¢ | éç¨äºæå·¥å­¦æ ¡é¡¹ç®ãå®¶åº­ååå\u0085¬å®¤ç»ç» | ä½è°è®¾è®¡",
+                        "reasons":  [
+                                        "products not matched expected keywords",
+                                        "context inheritance failed"
+                                    ]
+                    },
+                    {
+                        "session":  "quilt_preference_switch",
+                        "input":  "lighter and breathable",
+                        "pass":  false,
+                        "returned":  4,
+                        "top1":  "Ensenior 16 ä»¶è£\u0085 6 è±å¯¸è¶\u0085è LED åµå\u0085¥å¼å¸é¡¶ç¯ï¼å¸¦æ¥çº¿çï¼5000 K æ¥å\u0085ï¼12 W 110 W Eqvï¼å¯è°å\u0085 Can-Killer ç­ç¯ï¼1050 lm é«äº®åº¦ - ETL åè½æºä¹æè®¤è¯",
+                        "reasons":  [
+                                        "products not matched expected keywords",
+                                        "context inheritance failed"
+                                    ]
+                    },
+                    {
+                        "session":  "quilt_only_not_set",
+                        "input":  "i want to buy quilt",
+                        "pass":  false,
+                        "returned":  0,
+                        "top1":  "",
+                        "reasons":  [
+                                        "expected non-empty products",
+                                        "products not matched expected keywords"
+                                    ]
+                    },
+                    {
+                        "session":  "quilt_only_not_set",
+                        "input":  "only quilt, no set",
+                        "pass":  false,
+                        "returned":  0,
+                        "top1":  "",
+                        "reasons":  [
+                                        "expected non-empty products",
+                                        "context inheritance failed"
+                                    ]
+                    },
+                    {
+                        "session":  "lamp_context_choose",
+                        "input":  "recommend desk lamp",
+                        "pass":  true,
+                        "returned":  4,
+                        "top1":  "Ensenior 16 ä»¶è£\u0085 6 è±å¯¸è¶\u0085è LED åµå\u0085¥å¼å¸é¡¶ç¯ï¼å¸¦æ¥çº¿çï¼5000 K æ¥å\u0085ï¼12 W 110 W Eqvï¼å¯è°å\u0085 Can-Killer ç­ç¯ï¼1050 lm é«äº®åº¦ - ETL åè½æºä¹æè®¤è¯",
+                        "reasons":  [
+
+                                    ]
+                    },
+                    {
+                        "session":  "lamp_context_choose",
+                        "input":  "warmer light",
+                        "pass":  true,
+                        "returned":  3,
+                        "top1":  "ç¡¬è¿çº¿ LED æ©±æä¸ç\u0085§æ - 16 ç¦ï¼24 è±å¯¸ï¼å¯è°å\u0085ï¼CRI\u003e90ï¼3000 Kï¼æç½è²ï¼ï¼å¨æ¿æ©±æä¸ç¯ - å®½ä½ï¼æä¹\u0085éå±åºåº§ï¼å¸¦é²ééé - æå°ä¸ç¯",
+                        "reasons":  [
+
+                                    ]
+                    },
+                    {
+                        "session":  "lamp_context_choose",
+                        "input":  "which one do you recommend",
+                        "pass":  true,
+                        "returned":  3,
+                        "top1":  "ç¡¬è¿çº¿ LED æ©±æä¸ç\u0085§æ - 16 ç¦ï¼24 è±å¯¸ï¼å¯è°å\u0085ï¼CRI\u003e90ï¼3000 Kï¼æç½è²ï¼ï¼å¨æ¿æ©±æä¸ç¯ - å®½ä½ï¼æä¹\u0085éå±åºåº§ï¼å¸¦é²ééé - æå°ä¸ç¯",
+                        "reasons":  [
+
+                                    ]
+                    },
+                    {
+                        "session":  "mouse_no_drift",
+                        "input":  "i want a mouse",
+                        "pass":  false,
+                        "returned":  2,
+                        "top1":  "Razer DeathAdder V 2 æ¸¸æé¼ æ ï¼20 K DPI å\u0085å­¦ä¼ æå¨ - æå¿«çæ¸¸æé¼ æ å¼å\u0085³ - Chroma RGB ç¯å\u0085 - 8 ä¸ªå¯ç¼ç¨æé® - äººä½å·¥å­¦å½¢ç¶ - Halo Infinite ç",
+                        "reasons":  [
+                                        "products not matched expected keywords"
+                                    ]
+                    },
+                    {
+                        "session":  "mouse_no_drift",
+                        "input":  "more?",
+                        "pass":  false,
+                        "returned":  0,
+                        "top1":  "",
+                        "reasons":  [
+                                        "expected non-empty products",
+                                        "products not matched expected keywords",
+                                        "context inheritance failed"
+                                    ]
+                    },
+                    {
+                        "session":  "ambiguity_guidance_without_context",
+                        "input":  "which has highest rating",
+                        "pass":  false,
+                        "returned":  2,
+                        "top1":  "Razer DeathAdder V 2 æ¸¸æé¼ æ ï¼20 K DPI å\u0085å­¦ä¼ æå¨ - æå¿«çæ¸¸æé¼ æ å¼å\u0085³ - Chroma RGB ç¯å\u0085 - 8 ä¸ªå¯ç¼ç¨æé® - äººä½å·¥å­¦å½¢ç¶ - Halo Infinite ç",
+                        "reasons":  [
+                                        "reply missing expected hints",
+                                        "ambiguity guidance miss"
+                                    ]
+                    },
+                    {
+                        "session":  "intent_switch_from_headphone_to_quilt",
+                        "input":  "recommend headphones",
+                        "pass":  false,
+                        "returned":  4,
+                        "top1":  "Razer Kraken é¦æ èµç THX 7.1 ç¯ç»å£°æ¸¸æè³æºï¼å¯ä¼¸ç¼©éåªéº¦å\u0085é£ - USB DAC - éç¨äº PCãPS 4ãPS 5ãNintendo SwitchãXbox OneãXbox Series X å Sãç§»å¨è®¾å¤ - é»è²",
+                        "reasons":  [
+                                        "products not matched expected keywords"
+                                    ]
+                    },
+                    {
+                        "session":  "intent_switch_from_headphone_to_quilt",
+                        "input":  "i want to buy comforter",
+                        "pass":  false,
+                        "returned":  0,
+                        "top1":  "",
+                        "reasons":  [
+                                        "expected non-empty products",
+                                        "products not matched expected keywords"
+                                    ]
+                    }
+                ]
+}

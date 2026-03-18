@@ -11,6 +11,11 @@ import io.netty.handler.timeout.IdleStateHandler;
 import java.util.concurrent.TimeUnit;
 
 public class MonitorServerInitializer extends ChannelInitializer<SocketChannel> {
+    private final String monitorSharedSecret;
+
+    public MonitorServerInitializer(String monitorSharedSecret) {
+        this.monitorSharedSecret = monitorSharedSecret;
+    }
 
     @Override
     protected void initChannel(SocketChannel ch) throws Exception {
@@ -27,6 +32,6 @@ public class MonitorServerInitializer extends ChannelInitializer<SocketChannel> 
         pipeline.addLast(new StringEncoder());
 
         // Custom business logic handler
-        pipeline.addLast(new MonitorServerHandler());
+        pipeline.addLast(new MonitorServerHandler(monitorSharedSecret));
     }
 }

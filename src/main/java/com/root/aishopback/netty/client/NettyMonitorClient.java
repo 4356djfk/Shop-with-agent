@@ -13,12 +13,14 @@ public class NettyMonitorClient implements Runnable {
     
     // The account identifier simulated for this client terminal
     private final String account;
+    private final String sharedSecret;
 
     private EventLoopGroup group;
     private ChannelFuture channelFuture;
 
-    public NettyMonitorClient(String account) {
+    public NettyMonitorClient(String account, String sharedSecret) {
         this.account = account;
+        this.sharedSecret = sharedSecret;
     }
 
     @Override
@@ -28,7 +30,7 @@ public class NettyMonitorClient implements Runnable {
             Bootstrap b = new Bootstrap();
             b.group(group)
              .channel(NioSocketChannel.class)
-             .handler(new MonitorClientInitializer(account));
+             .handler(new MonitorClientInitializer(account, sharedSecret));
 
             // Start the client connection.
             channelFuture = b.connect(HOST, PORT).sync();
@@ -59,6 +61,6 @@ public class NettyMonitorClient implements Runnable {
 
     public static void main(String[] args) {
         // Simulating the user 'admin123' running the monitor locally
-        new Thread(new NettyMonitorClient("admin123")).start();
+        new Thread(new NettyMonitorClient("admin123", "change-me-dev-secret")).start();
     }
 }

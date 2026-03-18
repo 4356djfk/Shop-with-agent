@@ -28,6 +28,8 @@
     </scm>
     <properties>
         <java.version>17</java.version>
+        <langchain4j.version>1.9.1</langchain4j.version>
+        <langchain4j.milvus.version>1.9.1-beta17</langchain4j.milvus.version>
     </properties>
     <dependencies>
         <dependency>
@@ -80,6 +82,25 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-crypto</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j</artifactId>
+            <version>${langchain4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-open-ai</artifactId>
+            <version>${langchain4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-milvus</artifactId>
+            <version>${langchain4j.milvus.version}</version>
         </dependency>
     </dependencies>
 

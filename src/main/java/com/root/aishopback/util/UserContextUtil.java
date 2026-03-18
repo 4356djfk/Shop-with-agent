@@ -15,14 +15,6 @@ public class UserContextUtil {
             }
             throw new SecurityException("登录已失效，请重新登录");
         }
-
-        String userIdHeader = request.getHeader("X-User-Id");
-        if (userIdHeader != null && !userIdHeader.isBlank()) {
-            try {
-                return Long.parseLong(userIdHeader);
-            } catch (NumberFormatException ignored) {
-            }
-        }
         throw new SecurityException("未登录，请先登录");
     }
 }

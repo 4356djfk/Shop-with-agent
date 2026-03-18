@@ -27,13 +27,12 @@ public class ProductController {
     @GetMapping
     public ApiResponse<Map<String, Object>> list(
         @RequestParam(required = false) String category,
-        @RequestParam(required = false) String keyword
+        @RequestParam(required = false) String keyword,
+        @RequestParam(required = false) String sortBy,
+        @RequestParam(defaultValue = "1") Integer page,
+        @RequestParam(defaultValue = "24") Integer size
     ) {
-        List<ProductVO> list = shopProductService.listProducts(category, keyword);
-        Map<String, Object> data = new HashMap<>();
-        data.put("list", list);
-        data.put("total", list.size());
-        return ApiResponse.ok(data);
+        return ApiResponse.ok(shopProductService.listProducts(category, keyword, sortBy, page, size));
     }
 
     @GetMapping("/{id}")
@@ -44,10 +43,13 @@ public class ProductController {
 
     @GetMapping("/search")
     public ApiResponse<Map<String, Object>> search(@RequestParam String keyword) {
-        List<ProductVO> list = shopProductService.listProducts(null, keyword);
+        return ApiResponse.ok(shopProductService.listProducts(null, keyword, null, 1, 24));
+    }
+
+    @GetMapping("/categories")
+    public ApiResponse<Map<String, Object>> categories() {
         Map<String, Object> data = new HashMap<>();
-        data.put("list", list);
-        data.put("total", list.size());
+        data.put("list", shopProductService.listCategoryOptions());
         return ApiResponse.ok(data);
     }
 }

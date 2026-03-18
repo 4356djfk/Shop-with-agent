@@ -3,6 +3,7 @@ package com.root.aishopback.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.root.aishopback.entity.AppUser;
 import com.root.aishopback.mapper.AppUserMapper;
+import com.root.aishopback.security.PasswordService;
 import com.root.aishopback.service.AuthTokenService;
 import com.root.aishopback.service.MonitorClientManager;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,17 +30,20 @@ public class AuthController {
 
     private final MonitorClientManager monitorClientManager;
     private final AppUserMapper appUserMapper;
+    private final PasswordService passwordService;
     private final AuthTokenService authTokenService;
     private final long tokenTtlDays;
 
     public AuthController(
         MonitorClientManager monitorClientManager,
         AppUserMapper appUserMapper,
+        PasswordService passwordService,
         AuthTokenService authTokenService,
         @Value("${app.auth.token-ttl-days:7}") long tokenTtlDays
     ) {
         this.monitorClientManager = monitorClientManager;
         this.appUserMapper = appUserMapper;
+        this.passwordService = passwordService;
         this.authTokenService = authTokenService;
         this.tokenTtlDays = tokenTtlDays;
         staticAuthTokenService = authTokenService;
@@ -56,7 +60,22 @@ public class AuthController {
         AppUser dbUser = appUserMapper.selectOne(
             new LambdaQueryWrapper<AppUser>().eq(AppUser::getUsername, username).last("LIMIT 1")
         );
-        if (dbUser == null || dbUser.getPasswordHash() == null || !password.equals(dbUser.getPasswordHash())) {
+        if (dbUser == null || dbUser.getPasswordHash() == null) {
+            return ResponseEntity.status(401).body(Map.of("message", "Invalid username or password"));
+        }
+
+        boolean validPassword;
+        if (passwordService.isBcryptHash(dbUser.getPasswordHash())) {
+            validPassword = passwordService.matches(password, dbUser.getPasswordHash());
+        } else {
+            // Backward compatibility for legacy plaintext rows. Upgrade to BCrypt on successful login.
+            validPassword = password.equals(dbUser.getPasswordHash());
+            if (validPassword) {
+                dbUser.setPasswordHash(passwordService.encode(password));
+                appUserMapper.updateById(dbUser);
+            }
+        }
+        if (!validPassword) {
             return ResponseEntity.status(401).body(Map.of("message", "Invalid username or password"));
         }
 
@@ -92,7 +111,7 @@ public class AuthController {
 
         AppUser user = new AppUser();
         user.setUsername(username);
-        user.setPasswordHash(password);
+        user.setPasswordHash(passwordService.encode(password));
         user.setNickname(nullSafe(request.get("nickname"), username));
         user.setAvatarUrl("https://picsum.photos/seed/avatar/100/100");
         user.setEmail(nullSafe(request.get("email"), username + "@example.com"));
@@ -104,10 +123,22 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@RequestBody(required = false) Map<String, String> request, HttpServletRequest httpServletRequest) {
         String username = request == null ? "" : safe(request.get("username"));
+        String token = resolveToken(httpServletRequest);
+
+        // Fallback: if frontend doesn't pass username, resolve it from token to ensure monitor client is stopped.
+        if (username.isBlank() && !token.isBlank()) {
+            Long userId = authTokenService.getUserIdByToken(token);
+            if (userId != null) {
+                AppUser user = appUserMapper.selectById(userId);
+                if (user != null) {
+                    username = safe(user.getUsername());
+                }
+            }
+        }
+
         if (!username.isBlank()) {
             monitorClientManager.stopClientForUser(username);
         }
-        String token = resolveToken(httpServletRequest);
         if (!token.isBlank()) {
             authTokenService.removeToken(token);
         }

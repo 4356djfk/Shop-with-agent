@@ -8,7 +8,8 @@ import org.apache.ibatis.annotations.Update;
 
 @Mapper
 public interface ProductMapper extends BaseMapper<Product> {
-    @Update("UPDATE products SET stock = stock - #{quantity}, sales = COALESCE(sales, 0) + #{quantity} " +
+    @Update("UPDATE products SET stock = stock - #{quantity}, sales = COALESCE(sales, 0) + #{quantity}, " +
+        "buyer_count = COALESCE(buyer_count, sales, 0) + #{quantity} " +
         "WHERE id = #{productId} AND stock >= #{quantity}")
     int decreaseStock(@Param("productId") Long productId, @Param("quantity") Integer quantity);
 }

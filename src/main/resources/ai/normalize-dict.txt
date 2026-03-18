@@ -1,0 +1,28 @@
+# format: raw=normalized
+# colloquial phrases
+我的意思是=
+我是这个想的=
+我想说的是=
+就是说=
+其实=
+那个=
+
+# shopping intent normalization
+包包=包
+书包=背包
+耳塞=耳机
+蓝牙耳塞=蓝牙耳机
+本本=笔记本
+本子电脑=笔记本
+
+# follow-up normalization
+有没有便宜一点的=更便宜
+便宜一点=更便宜
+便宜点=更便宜
+再便宜一点=更便宜
+
+# popularity/ranking normalization
+最火爆=销量最高
+爆款=销量高
+最热卖=销量高
+

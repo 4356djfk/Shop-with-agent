@@ -2,6 +2,7 @@ package com.root.aishopback.netty.client;
 
 import com.alibaba.fastjson2.JSON;
 import com.root.aishopback.netty.message.MonitorMessage;
+import com.root.aishopback.security.HmacSignatureUtil;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;
@@ -10,13 +11,15 @@ import io.netty.handler.timeout.IdleStateEvent;
 public class MonitorClientHandler extends SimpleChannelInboundHandler<String> {
 
     private final String account;
+    private final String sharedSecret;
     private final OshiMonitor oshiMonitor;
 
     // Heartbeat counter to distinguish between pure heartbeat and data
     private int sendCount = 0;
 
-    public MonitorClientHandler(String account) {
+    public MonitorClientHandler(String account, String sharedSecret) {
         this.account = account;
+        this.sharedSecret = sharedSecret;
         this.oshiMonitor = new OshiMonitor();
     }
 
@@ -68,6 +71,10 @@ public class MonitorClientHandler extends SimpleChannelInboundHandler<String> {
            message.setNetworkLatency(oshiMonitor.getNetworkLatency());
            message.setIp(oshiMonitor.getIpAddress());
         }
+        long ts = System.currentTimeMillis();
+        message.setTimestamp(ts);
+        String payload = message.getAccount() + "|" + message.getType() + "|" + ts;
+        message.setSignature(HmacSignatureUtil.sign(payload, sharedSecret));
 
         String json = JSON.toJSONString(message);
         ctx.writeAndFlush(json + "\n");
