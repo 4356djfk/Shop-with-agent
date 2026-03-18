@@ -29,11 +29,23 @@ services:
       PGPASSWORD: ${POSTGRES_PASSWORD:-123456}
     volumes:
       - ./sql/aishop_postgres.sql:/sql/aishop_postgres.sql:ro
+      - ./sql/products_from_es_12165.sql:/sql/products_from_es_12165.sql:ro
+      - ./sql/category_quality_all_in_one.sql:/sql/category_quality_all_in_one.sql:ro
+      - ./sql/category_quality_audit.sql:/sql/category_quality_audit.sql:ro
     command:
       - /bin/sh
       - -c
       - >
-        psql -h postgres -U ${POSTGRES_USER:-admin} -d ${POSTGRES_DB:-aishop_db} -v ON_ERROR_STOP=1 -f /sql/aishop_postgres.sql
+        set -e;
+        for f in
+        /sql/aishop_postgres.sql
+        /sql/products_from_es_12165.sql
+        /sql/category_quality_all_in_one.sql
+        /sql/category_quality_audit.sql
+        ; do
+          echo "[db-init] running $${f}";
+          psql -h postgres -U ${POSTGRES_USER:-admin} -d ${POSTGRES_DB:-aishop_db} -v ON_ERROR_STOP=1 -f "$${f}";
+        done
     restart: "no"
 
   redis:
