@@ -4,12 +4,15 @@ import java.util.List;
 
 public class CreateOrderRequest {
     private String name;
+    private String consignee;
     private String phone;
     private String address;
     private List<OrderItemRequest> items;
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
+    public String getConsignee() { return consignee; }
+    public void setConsignee(String consignee) { this.consignee = consignee; }
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
     public String getAddress() { return address; }

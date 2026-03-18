@@ -59,7 +59,8 @@ public class ShopOrderServiceImpl implements ShopOrderService {
         if (request == null || request.getItems() == null || request.getItems().isEmpty()) {
             throw new IllegalArgumentException("order items cannot be empty");
         }
-        if (isBlank(request.getName()) || isBlank(request.getPhone()) || isBlank(request.getAddress())) {
+        String consigneeName = firstNonBlank(request.getName(), request.getConsignee());
+        if (isBlank(consigneeName) || isBlank(request.getPhone()) || isBlank(request.getAddress())) {
             throw new IllegalArgumentException("shipping info is incomplete");
         }
 
@@ -69,7 +70,7 @@ public class ShopOrderServiceImpl implements ShopOrderService {
         order.setUserId(effectiveUserId);
         order.setOrderStatus("pending_payment");
         order.setPaymentStatus("unpaid");
-        order.setConsigneeName(request.getName());
+        order.setConsigneeName(consigneeName);
         order.setConsigneePhone(request.getPhone());
         order.setConsigneeAddress(request.getAddress());
         order.setShippingAmount(BigDecimal.ZERO);
@@ -258,6 +259,18 @@ public class ShopOrderServiceImpl implements ShopOrderService {
 
     private boolean isBlank(String value) {
         return value == null || value.isBlank();
+    }
+
+    private String firstNonBlank(String... values) {
+        if (values == null) {
+            return null;
+        }
+        for (String value : values) {
+            if (!isBlank(value)) {
+                return value;
+            }
+        }
+        return null;
     }
 
     private long normalizeUserId(long userId) {

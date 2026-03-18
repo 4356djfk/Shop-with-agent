@@ -3,11 +3,7 @@ package com.root.aishopback.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.root.aishopback.entity.Product;
-import com.root.aishopback.entity.ProductImage;
-import com.root.aishopback.entity.ProductTag;
-import com.root.aishopback.mapper.ProductImageMapper;
 import com.root.aishopback.mapper.ProductMapper;
-import com.root.aishopback.mapper.ProductTagMapper;
 import com.root.aishopback.service.ShopProductService;
 import com.root.aishopback.vo.ProductVO;
 import org.springframework.stereotype.Service;
@@ -30,13 +26,9 @@ public class ShopProductServiceImpl implements ShopProductService {
         Pattern.compile("https?://m\\.media-amazon\\.com/images/W/[^/]+/images/", Pattern.CASE_INSENSITIVE);
 
     private final ProductMapper productMapper;
-    private final ProductImageMapper productImageMapper;
-    private final ProductTagMapper productTagMapper;
 
-    public ShopProductServiceImpl(ProductMapper productMapper, ProductImageMapper productImageMapper, ProductTagMapper productTagMapper) {
+    public ShopProductServiceImpl(ProductMapper productMapper) {
         this.productMapper = productMapper;
-        this.productImageMapper = productImageMapper;
-        this.productTagMapper = productTagMapper;
     }
 
     @Override
@@ -130,31 +122,11 @@ public class ShopProductServiceImpl implements ShopProductService {
     }
 
     private Map<Long, List<String>> buildImageMap(List<Long> ids) {
-        if (ids.isEmpty()) return Collections.emptyMap();
-        LambdaQueryWrapper<ProductImage> imageQuery = new LambdaQueryWrapper<>();
-        imageQuery.in(ProductImage::getProductId, ids).orderByAsc(ProductImage::getSortOrder);
-        List<ProductImage> images = productImageMapper.selectList(imageQuery);
-        Map<Long, List<String>> map = new LinkedHashMap<>();
-        for (ProductImage image : images) {
-            String normalized = normalizeImageUrl(image.getImageUrl());
-            if (normalized == null || normalized.isBlank()) {
-                continue;
-            }
-            map.computeIfAbsent(image.getProductId(), key -> new ArrayList<>()).add(normalized);
-        }
-        return map;
+        return Collections.emptyMap();
     }
 
     private Map<Long, List<String>> buildTagMap(List<Long> ids) {
-        if (ids.isEmpty()) return Collections.emptyMap();
-        LambdaQueryWrapper<ProductTag> tagQuery = new LambdaQueryWrapper<>();
-        tagQuery.in(ProductTag::getProductId, ids);
-        List<ProductTag> tags = productTagMapper.selectList(tagQuery);
-        return tags.stream().collect(Collectors.groupingBy(
-            ProductTag::getProductId,
-            LinkedHashMap::new,
-            Collectors.mapping(ProductTag::getTagName, Collectors.toList())
-        ));
+        return Collections.emptyMap();
     }
 
     private ProductVO toProductVO(Product product, List<String> images, List<String> tags) {
