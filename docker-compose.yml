@@ -21,6 +21,7 @@ services:
   db-init:
     image: postgres:16-alpine
     container_name: aishop-db-init
+    profiles: ["init"]
     depends_on:
       postgres:
         condition: service_healthy
