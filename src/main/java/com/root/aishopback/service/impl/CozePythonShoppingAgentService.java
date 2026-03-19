@@ -4,6 +4,10 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.root.aishopback.service.AiShoppingAgentService;
+import com.root.aishopback.service.ShopCartService;
+import com.root.aishopback.service.ShopProductService;
+import com.root.aishopback.vo.CartItemVO;
+import com.root.aishopback.vo.ProductVO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Primary;
@@ -22,9 +26,12 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.LinkedHashSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 @Primary
@@ -32,8 +39,13 @@ import java.util.UUID;
 public class CozePythonShoppingAgentService implements AiShoppingAgentService {
 
     private static final long GUEST_USER_KEY = 0L;
+    private static final Pattern PRODUCT_ID_PATTERN = Pattern.compile("(?:商品\\s*ID|ID|id)\\s*[:：]?\\s*(\\d{3,10})");
+    private static final Pattern NUMBER_PATTERN = Pattern.compile("(\\d{1,3})");
+    private static final Pattern QTY_PATTERN = Pattern.compile("(?:数量|x|X|\\*)\\s*[:：]?\\s*(\\d{1,3})|(\\d{1,3})\\s*(?:件|份|个|袋|包)");
 
     private final HttpClient httpClient;
+    private final ShopCartService shopCartService;
+    private final ShopProductService shopProductService;
     private final String cozeBaseUrl;
     private final String chatPath;
     private final String chatModel;
@@ -43,6 +55,7 @@ public class CozePythonShoppingAgentService implements AiShoppingAgentService {
     private final long timeoutMillis;
     private final int retryMaxAttempts;
     private final long retryBaseBackoffMillis;
+    private final boolean localCartFallbackEnabled;
 
     private final Map<Long, Deque<Map<String, String>>> conversations = new ConcurrentHashMap<>();
     private final AtomicLong totalRequests = new AtomicLong(0);
@@ -50,6 +63,8 @@ public class CozePythonShoppingAgentService implements AiShoppingAgentService {
     private volatile String lastError = "";
 
     public CozePythonShoppingAgentService(
+        ShopCartService shopCartService,
+        ShopProductService shopProductService,
         @Value("${app.ai.coze.base-url:http://127.0.0.1:5000}") String cozeBaseUrl,
         @Value("${app.ai.coze.chat-path:/run}") String chatPath,
         @Value("${app.ai.coze.chat-model:coze-agent}") String chatModel,
@@ -58,8 +73,11 @@ public class CozePythonShoppingAgentService implements AiShoppingAgentService {
         @Value("${app.ai.coze.max-history-turns:10}") int maxHistoryTurns,
         @Value("${app.ai.coze.timeout-millis:30000}") long timeoutMillis,
         @Value("${app.ai.coze.retry-max-attempts:3}") int retryMaxAttempts,
-        @Value("${app.ai.coze.retry-base-backoff-millis:800}") long retryBaseBackoffMillis
+        @Value("${app.ai.coze.retry-base-backoff-millis:800}") long retryBaseBackoffMillis,
+        @Value("${app.ai.coze.local-cart-fallback-enabled:false}") boolean localCartFallbackEnabled
     ) {
+        this.shopCartService = shopCartService;
+        this.shopProductService = shopProductService;
         this.cozeBaseUrl = trimTrailingSlash(cozeBaseUrl);
         this.chatPath = chatPath.startsWith("/") ? chatPath : "/" + chatPath;
         this.chatModel = chatModel;
@@ -69,6 +87,7 @@ public class CozePythonShoppingAgentService implements AiShoppingAgentService {
         this.timeoutMillis = Math.max(1000L, timeoutMillis);
         this.retryMaxAttempts = Math.max(1, retryMaxAttempts);
         this.retryBaseBackoffMillis = Math.max(100L, retryBaseBackoffMillis);
+        this.localCartFallbackEnabled = localCartFallbackEnabled;
         this.httpClient = HttpClient.newBuilder()
             .connectTimeout(Duration.ofMillis(this.timeoutMillis))
             .build();
@@ -87,6 +106,15 @@ public class CozePythonShoppingAgentService implements AiShoppingAgentService {
         history.addLast(message("user", prompt));
         trimHistory(history);
 
+        if (localCartFallbackEnabled) {
+            AgentReply localHandled = tryHandleLocalCartIntent(prompt, userKey, history);
+            if (localHandled != null) {
+                history.addLast(message("assistant", localHandled.content()));
+                trimHistory(history);
+                return localHandled;
+            }
+        }
+
         try {
             String content = callCoze(history, userKey, prompt);
             if (content == null || content.isBlank()) {
@@ -98,7 +126,7 @@ public class CozePythonShoppingAgentService implements AiShoppingAgentService {
             history.addLast(message("assistant", content));
             trimHistory(history);
             lastError = "";
-            return new AgentReply(content, List.of());
+            return new AgentReply(content, extractProductCards(content));
         } catch (Exception ex) {
             failures.incrementAndGet();
             lastError = "request#" + reqNo + ": " + ex.getMessage();
@@ -232,6 +260,10 @@ public class CozePythonShoppingAgentService implements AiShoppingAgentService {
         if ("/run".equals(chatPath)) {
             JSONObject payload = new JSONObject();
             JSONArray messages = new JSONArray();
+            JSONObject userContext = new JSONObject();
+            userContext.put("role", "system");
+            userContext.put("content", buildUserContextInstruction(userKey));
+            messages.add(userContext);
             for (Map<String, String> msg : history) {
                 if (msg == null) {
                     continue;
@@ -240,6 +272,9 @@ public class CozePythonShoppingAgentService implements AiShoppingAgentService {
                 String content = msg.get("content");
                 if (role == null || content == null || content.isBlank()) {
                     continue;
+                }
+                if ("user".equals(role) && prompt != null && content.equals(prompt)) {
+                    content = enrichedPrompt;
                 }
                 JSONObject row = new JSONObject();
                 row.put("role", role);
@@ -265,7 +300,20 @@ public class CozePythonShoppingAgentService implements AiShoppingAgentService {
     }
 
     private String enrichPromptWithUser(long userKey, String prompt) {
-        return prompt == null ? "" : prompt.trim();
+        String base = prompt == null ? "" : prompt.trim();
+        if (userKey <= 0L) {
+            return base;
+        }
+        return "当前登录用户ID=" + userKey + "。用户原话：" + base;
+    }
+
+    private String buildUserContextInstruction(long userKey) {
+        if (userKey > 0L) {
+            return "系统上下文：用户已登录，当前用户ID=" + userKey
+                + "。调用购物车、订单、个性化推荐工具时，直接使用该 user_id。"
+                + "禁止向用户索要 user_id。";
+        }
+        return "系统上下文：用户未登录。涉及购物车、订单操作时，先提示用户登录。";
     }
 
     private String suppressUserIdPrompt(String content) {
@@ -416,6 +464,320 @@ public class CozePythonShoppingAgentService implements AiShoppingAgentService {
         } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
         }
+    }
+
+    private AgentReply tryHandleLocalCartIntent(String prompt, long userKey, Deque<Map<String, String>> history) {
+        if (prompt == null || prompt.isBlank()) {
+            return null;
+        }
+        String lowered = prompt.toLowerCase();
+        boolean cartRelated = lowered.contains("购物车") || lowered.contains("加购") || lowered.contains("加入");
+        if (!cartRelated) {
+            return null;
+        }
+        if (userKey <= 0L) {
+            return new AgentReply("当前未登录，暂时无法操作购物车，请先登录。", List.of());
+        }
+
+        if (isClearCartIntent(lowered)) {
+            List<CartItemVO> items = shopCartService.listCart(userKey);
+            for (CartItemVO item : items) {
+                if (item != null && item.getId() != null) {
+                    shopCartService.removeCart(userKey, item.getId(), null);
+                }
+            }
+            return new AgentReply("已为你清空购物车。", List.of());
+        }
+
+        if (isRemoveCartIntent(lowered)) {
+            Long pid = resolveTargetProductId(prompt, history);
+            if (pid == null) {
+                return new AgentReply("请告诉我要移除的商品ID，例如：移除 商品ID 11976。", List.of());
+            }
+            shopCartService.removeCart(userKey, null, pid);
+            return new AgentReply("已从购物车移除商品ID " + pid + "。", List.of());
+        }
+
+        if (isUpdateCartIntent(lowered)) {
+            Long pid = resolveTargetProductId(prompt, history);
+            Integer qty = resolveQuantity(prompt, 1);
+            if (pid == null) {
+                return new AgentReply("请告诉我要修改的商品ID和数量，例如：商品ID 11976 数量 2。", List.of());
+            }
+            if (qty <= 0) {
+                shopCartService.removeCart(userKey, null, pid);
+                return new AgentReply("数量为0，已帮你移除商品ID " + pid + "。", List.of());
+            }
+            shopCartService.updateCart(userKey, null, pid, qty);
+            return new AgentReply("已将商品ID " + pid + " 的数量改为 " + qty + "。", List.of());
+        }
+
+        if (isAddToCartIntent(lowered)) {
+            Long pid = resolveTargetProductId(prompt, history);
+            Integer qty = resolveQuantity(prompt, 1);
+            if (pid == null) {
+                return new AgentReply("我识别到你要加购，但还没拿到商品ID。你可以说：加入购物车 商品ID 11976 数量 1。", List.of());
+            }
+            CartItemVO item = shopCartService.addToCart(userKey, pid, qty);
+            ProductVO product = shopProductService.getProductDetail(pid);
+            String name = product == null || product.getName() == null ? ("商品ID " + pid) : product.getName();
+            int finalQty = item == null || item.getQuantity() == null ? qty : item.getQuantity();
+            return new AgentReply("已加入购物车：" + name + " x " + qty + "，当前购物车该商品数量 " + finalQty + "。", product == null ? List.of() : List.of(product));
+        }
+
+        if (isViewCartIntent(lowered)) {
+            return buildCartViewReply(userKey);
+        }
+        return null;
+    }
+
+    private AgentReply buildCartViewReply(long userKey) {
+        List<CartItemVO> items = shopCartService.listCart(userKey);
+        if (items == null || items.isEmpty()) {
+            return new AgentReply("你的购物车还是空的，可以先让我推荐商品后再加购。", List.of());
+        }
+        StringBuilder sb = new StringBuilder("当前购物车有 ").append(items.size()).append(" 件商品：\n");
+        List<ProductVO> cards = new ArrayList<>();
+        int idx = 1;
+        for (CartItemVO it : items) {
+            if (it == null) continue;
+            sb.append(idx).append(". ID ").append(it.getProductId() == null ? "-" : it.getProductId())
+                .append("｜").append(it.getName() == null ? "未命名商品" : it.getName())
+                .append("｜数量 ").append(it.getQuantity() == null ? 1 : it.getQuantity())
+                .append("\n");
+            if (it.getProductId() != null) {
+                ProductVO p = shopProductService.getProductDetail(it.getProductId());
+                if (p != null && cards.size() < 4) {
+                    cards.add(p);
+                }
+            }
+            idx++;
+        }
+        return new AgentReply(sb.toString().trim(), cards);
+    }
+
+    private boolean isAddToCartIntent(String lowered) {
+        return lowered.contains("加入购物车") || lowered.contains("加到购物车") || lowered.contains("加购") || lowered.contains("加入");
+    }
+
+    private boolean isViewCartIntent(String lowered) {
+        if (!lowered.contains("购物车")) {
+            return false;
+        }
+        if (isAddToCartIntent(lowered) || isRemoveCartIntent(lowered) || isUpdateCartIntent(lowered) || isClearCartIntent(lowered)) {
+            return false;
+        }
+        return lowered.contains("看看")
+            || lowered.contains("查看")
+            || lowered.contains("看下")
+            || lowered.contains("查购物车")
+            || lowered.contains("购物车里有什么")
+            || lowered.equals("购物车");
+    }
+
+    private boolean isRemoveCartIntent(String lowered) {
+        return lowered.contains("移除") || lowered.contains("删除") || lowered.contains("去掉");
+    }
+
+    private boolean isClearCartIntent(String lowered) {
+        return lowered.contains("清空购物车") || (lowered.contains("购物车") && lowered.contains("清空"));
+    }
+
+    private boolean isUpdateCartIntent(String lowered) {
+        return lowered.contains("数量") || lowered.contains("改成") || lowered.contains("改为");
+    }
+
+    private Integer resolveQuantity(String prompt, int fallback) {
+        Matcher m = QTY_PATTERN.matcher(prompt);
+        while (m.find()) {
+            String g1 = m.group(1);
+            String g2 = m.group(2);
+            String v = g1 != null && !g1.isBlank() ? g1 : g2;
+            if (v == null || v.isBlank()) continue;
+            try {
+                return Math.max(0, Math.min(99, Integer.parseInt(v)));
+            } catch (NumberFormatException ignored) {
+                // continue
+            }
+        }
+        return fallback;
+    }
+
+    private Long resolveTargetProductId(String prompt, Deque<Map<String, String>> history) {
+        Long explicit = parseExplicitProductId(prompt);
+        if (explicit != null) {
+            return explicit;
+        }
+        int ordinal = parseOrdinal(prompt);
+        if (ordinal > 0) {
+            List<Long> ids = extractIdsFromLastAssistant(history);
+            if (ids.size() >= ordinal) {
+                return ids.get(ordinal - 1);
+            }
+            Long byName = resolveProductIdByAssistantName(history, ordinal);
+            if (byName != null) {
+                return byName;
+            }
+        }
+        return null;
+    }
+
+    private Long parseExplicitProductId(String text) {
+        Matcher m = PRODUCT_ID_PATTERN.matcher(text == null ? "" : text);
+        if (m.find()) {
+            try {
+                return Long.parseLong(m.group(1));
+            } catch (NumberFormatException ignored) {
+                return null;
+            }
+        }
+        Matcher num = NUMBER_PATTERN.matcher(text == null ? "" : text);
+        while (num.find()) {
+            String n = num.group(1);
+            if (n == null) continue;
+            try {
+                long v = Long.parseLong(n);
+                if (v >= 1000) {
+                    return v;
+                }
+            } catch (NumberFormatException ignored) {
+                // continue
+            }
+        }
+        return null;
+    }
+
+    private int parseOrdinal(String text) {
+        String t = text == null ? "" : text;
+        if (t.contains("第一个") || t.contains("第1个") || t.contains("第一")) return 1;
+        if (t.contains("第二个") || t.contains("第2个") || t.contains("第二")) return 2;
+        if (t.contains("第三个") || t.contains("第3个") || t.contains("第三")) return 3;
+        if (t.contains("第四个") || t.contains("第4个") || t.contains("第四")) return 4;
+        return 0;
+    }
+
+    private List<Long> extractIdsFromLastAssistant(Deque<Map<String, String>> history) {
+        if (history == null || history.isEmpty()) {
+            return List.of();
+        }
+        List<Map<String, String>> copy = new ArrayList<>(history);
+        for (int i = copy.size() - 1; i >= 0; i--) {
+            Map<String, String> msg = copy.get(i);
+            if (msg == null) continue;
+            if (!"assistant".equals(msg.get("role"))) continue;
+            String content = msg.get("content");
+            if (content == null || content.isBlank()) continue;
+            LinkedHashSet<Long> ids = new LinkedHashSet<>();
+            Matcher m = PRODUCT_ID_PATTERN.matcher(content);
+            while (m.find()) {
+                try {
+                    ids.add(Long.parseLong(m.group(1)));
+                } catch (Exception ignored) {
+                    // no-op
+                }
+                if (ids.size() >= 8) break;
+            }
+            if (!ids.isEmpty()) {
+                return new ArrayList<>(ids);
+            }
+        }
+        return List.of();
+    }
+
+    private Long resolveProductIdByAssistantName(Deque<Map<String, String>> history, int ordinal) {
+        if (history == null || history.isEmpty() || ordinal <= 0) {
+            return null;
+        }
+        List<Map<String, String>> copy = new ArrayList<>(history);
+        for (int i = copy.size() - 1; i >= 0; i--) {
+            Map<String, String> msg = copy.get(i);
+            if (msg == null || !"assistant".equals(msg.get("role"))) {
+                continue;
+            }
+            String content = msg.get("content");
+            if (content == null || content.isBlank()) {
+                continue;
+            }
+            List<String> names = extractCandidateNames(content);
+            if (names.size() >= ordinal) {
+                String targetName = names.get(ordinal - 1);
+                List<ProductVO> candidates = shopProductService.listProducts(null, targetName);
+                if (candidates != null && !candidates.isEmpty() && candidates.get(0).getId() != null) {
+                    return candidates.get(0).getId();
+                }
+            }
+        }
+        return null;
+    }
+
+    private List<String> extractCandidateNames(String content) {
+        String[] lines = content.replace("\r\n", "\n").split("\n");
+        List<String> out = new ArrayList<>();
+        for (String line : lines) {
+            if (line == null) continue;
+            String s = line.trim();
+            if (s.isBlank()) continue;
+            // Typical recommendation line patterns.
+            if (!(s.contains("｜") || s.contains("|") || s.startsWith("-") || s.startsWith("**"))) {
+                continue;
+            }
+            String cleaned = s
+                .replaceAll("^[-*\\d.\\s]+", "")
+                .replace("**", "")
+                .replace("Top1 推荐", "")
+                .trim();
+            // Remove ID and price fragments.
+            cleaned = cleaned
+                .replaceAll("ID\\s*[:：]?\\s*\\d{3,10}", "")
+                .replaceAll("￥\\s*\\d+(?:\\.\\d+)?", "")
+                .replaceAll("¥\\s*\\d+(?:\\.\\d+)?", "")
+                .replaceAll("\\|+", " ")
+                .replaceAll("｜+", " ")
+                .trim();
+            if (cleaned.length() >= 4) {
+                out.add(cleaned);
+            }
+            if (out.size() >= 6) {
+                break;
+            }
+        }
+        return out;
+    }
+
+    private List<ProductVO> extractProductCards(String content) {
+        if (content == null || content.isBlank()) {
+            return List.of();
+        }
+        LinkedHashSet<Long> ids = new LinkedHashSet<>();
+        Matcher matcher = PRODUCT_ID_PATTERN.matcher(content);
+        while (matcher.find()) {
+            String idStr = matcher.group(1);
+            if (idStr == null || idStr.isBlank()) {
+                continue;
+            }
+            try {
+                ids.add(Long.parseLong(idStr));
+            } catch (NumberFormatException ignored) {
+                // skip invalid id token
+            }
+            if (ids.size() >= 6) {
+                break;
+            }
+        }
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        List<ProductVO> cards = new ArrayList<>();
+        for (Long id : ids) {
+            ProductVO p = shopProductService.getProductDetail(id);
+            if (p != null) {
+                cards.add(p);
+            }
+            if (cards.size() >= 4) {
+                break;
+            }
+        }
+        return cards;
     }
 
 }
