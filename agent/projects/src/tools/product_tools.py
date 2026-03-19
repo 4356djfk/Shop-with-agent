@@ -113,6 +113,40 @@ def _build_keyword_fallbacks(keyword: str) -> List[str]:
     return uniq[:5]
 
 
+def _expand_keyword_variants(keyword: str) -> List[str]:
+    text = (keyword or "").strip().lower()
+    if not text:
+        return []
+    mapping = {
+        "snacks": ["零食", "辣条", "魔芋", "豆干", "卤味"],
+        "snack": ["零食", "辣条", "魔芋", "豆干", "卤味"],
+        "headphones": ["耳机", "蓝牙耳机", "降噪耳机"],
+        "headphone": ["耳机", "蓝牙耳机", "降噪耳机"],
+        "shoes": ["鞋", "鞋子", "运动鞋", "跑鞋"],
+        "shoe": ["鞋", "鞋子", "运动鞋", "跑鞋"],
+        "dress": ["连衣裙", "裙子"],
+        "shirt": ["衬衫"],
+        "shirts": ["衬衫"],
+    }
+    out: List[str] = [keyword] if keyword else []
+    if text in mapping:
+        out.extend(mapping[text])
+    # keyword 本身的拆词候选也纳入变体池
+    out.extend(_build_keyword_fallbacks(keyword or ""))
+    seen = set()
+    deduped: List[str] = []
+    for k in out:
+        v = (k or "").strip()
+        if not v:
+            continue
+        lk = v.lower()
+        if lk in seen:
+            continue
+        seen.add(lk)
+        deduped.append(v)
+    return deduped[:8]
+
+
 @tool
 def search_products(
     keyword: Optional[str] = None,
@@ -167,14 +201,16 @@ def search_products(
         response = _normalize_products_response(response)
         primary_items = _extract_products(response)
 
-        attempted_keywords = [keyword] if keyword else []
+        attempted_keywords = []
         fallback_used = False
 
-        # 渐进式回退：组合词命不中时自动拆词搜索
-        if keyword and not primary_items:
+        # 渐进式回退：组合词命不中或命中太少时自动拆词/同义词搜索
+        if keyword and len(primary_items) < min(3, page_size):
             merged_items: List[Dict[str, Any]] = []
-            for kw in _build_keyword_fallbacks(keyword):
+            merged_items.extend(primary_items)
+            for kw in _expand_keyword_variants(keyword):
                 if kw == keyword:
+                    attempted_keywords.append(kw)
                     continue
                 sub_params = dict(params)
                 sub_params["keyword"] = kw
@@ -190,6 +226,8 @@ def search_products(
                 deduped = _dedupe_product_list(merged_items)[:page_size]
                 response["data"] = deduped
                 response["total"] = len(deduped)
+        elif keyword:
+            attempted_keywords.append(keyword)
 
         response["search_meta"] = {
             "fallback_used": fallback_used,

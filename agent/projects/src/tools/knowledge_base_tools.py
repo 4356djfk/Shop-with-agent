@@ -157,6 +157,36 @@ def _required_slots_for_category(category_or_scene: str) -> list[str]:
     return ["category_or_scene", "budget", "core_preference"]
 
 
+def _category_keyword_candidates(category_or_scene: str) -> list[str]:
+    raw = (category_or_scene or "").strip()
+    if not raw:
+        return []
+    key = raw.lower()
+    mapping = {
+        "snacks": ["零食", "辣条", "魔芋", "豆干", "卤味"],
+        "snack": ["零食", "辣条", "魔芋", "豆干", "卤味"],
+        "headphones": ["耳机", "蓝牙耳机", "降噪耳机"],
+        "headphone": ["耳机", "蓝牙耳机", "降噪耳机"],
+        "shoes": ["鞋", "鞋子", "运动鞋", "跑鞋"],
+        "shoe": ["鞋", "鞋子", "运动鞋", "跑鞋"],
+        "dress": ["连衣裙", "裙子"],
+    }
+    out = [raw]
+    out.extend(mapping.get(key, []))
+    deduped: list[str] = []
+    seen = set()
+    for x in out:
+        s = (x or "").strip()
+        if not s:
+            continue
+        k = s.lower()
+        if k in seen:
+            continue
+        seen.add(k)
+        deduped.append(s)
+    return deduped[:6]
+
+
 @tool
 def retrieve_shopping_guidance(
     user_message: str,
@@ -360,7 +390,6 @@ def inspect_inventory_signals(
     params: dict[str, Any] = {
         "page": 1,
         "page_size": max(10, min(100, int(limit))),
-        "keyword": keyword,
         "sort_by": "sales_desc",
     }
     if isinstance(budget.get("max"), (int, float)):
@@ -368,14 +397,28 @@ def inspect_inventory_signals(
     if isinstance(budget.get("min"), (int, float)):
         params["min_price"] = budget["min"]
 
-    try:
-        response = client.get("/products", params=params)
-    except Exception as e:
+    items: list[dict[str, Any]] = []
+    attempted_keywords: list[str] = []
+    last_error = ""
+    for kw in _category_keyword_candidates(keyword):
+        try:
+            attempted_keywords.append(kw)
+            sub_params = dict(params)
+            sub_params["keyword"] = kw
+            response = client.get("/products", params=sub_params)
+            sub_items = response.get("data", []) if isinstance(response, dict) else []
+            if isinstance(sub_items, list) and sub_items:
+                items.extend([x for x in sub_items if isinstance(x, dict)])
+        except Exception as e:
+            last_error = str(e)
+
+    if not items and last_error:
         return json.dumps(
             {
                 "ok": False,
                 "reason": "api_error",
-                "error": str(e),
+                "error": last_error,
+                "attempted_keywords": attempted_keywords,
                 "askable_dimensions": [],
                 "recommended_question_count": 0,
             },
@@ -383,9 +426,17 @@ def inspect_inventory_signals(
             indent=2,
         )
 
-    items = response.get("data", []) if isinstance(response, dict) else []
-    if not isinstance(items, list):
-        items = []
+    # 去重
+    uniq_map: dict[str, dict[str, Any]] = {}
+    for row in items:
+        key_row = f"{str(row.get('name','')).strip().lower()}|{str(row.get('brand','')).strip().lower()}|{row.get('price')}"
+        old = uniq_map.get(key_row)
+        if old is None:
+            uniq_map[key_row] = row
+            continue
+        if int((row.get("stock") or 0)) > int((old.get("stock") or 0)):
+            uniq_map[key_row] = row
+    items = list(uniq_map.values())
 
     names = " ".join([str(x.get("name", "")) for x in items if isinstance(x, dict)]).lower()
     categories = list({str(x.get("category", "")).strip() for x in items if isinstance(x, dict) and x.get("category")})
@@ -419,6 +470,7 @@ def inspect_inventory_signals(
             "ok": True,
             "keyword": keyword,
             "inventory_count": len(items),
+            "attempted_keywords": attempted_keywords,
             "top_categories": categories[:5],
             "askable_dimensions": askable_dimensions,
             "recommended_question_count": recommended_question_count,
