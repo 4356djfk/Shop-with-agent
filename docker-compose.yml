@@ -1,4 +1,57 @@
 services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aishop-app
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-aishop_db}
+      DB_USERNAME: ${POSTGRES_USER:-admin}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-123456}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      ES_ENABLED: ${ES_ENABLED:-true}
+      ES_HOST: elasticsearch
+      ES_PORT: 9200
+      ES_INDEX: ${ES_INDEX:-products_search}
+      OPENAI_CHAT_BASE_URL: ${OPENAI_CHAT_BASE_URL:-https://api.190269.xyz/v1}
+      OPENAI_CHAT_API_KEY: ${OPENAI_CHAT_API_KEY:-}
+      OPENAI_CHAT_MODEL: ${OPENAI_CHAT_MODEL:-gpt-5.2}
+      AI_PROVIDER: ${AI_PROVIDER:-coze}
+      COZE_BASE_URL: http://aishop-agent:5000
+      COZE_CHAT_PATH: /run
+      MONITOR_ENABLED: ${MONITOR_ENABLED:-false}
+      AI_MILVUS_ENABLED: ${AI_MILVUS_ENABLED:-true}
+      AI_MILVUS_HOST: milvus
+      AI_MILVUS_PORT: 19530
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_started
+      milvus:
+        condition: service_started
+      aishop-agent:
+        condition: service_started
+
+  aishop-agent:
+    build:
+      context: ./agent/projects
+      dockerfile: Dockerfile
+    container_name: aishop-agent
+    environment:
+      COZE_WORKSPACE_PATH: /app
+      SPRING_BOOT_API_URL: http://app:8080/api/agent
+      OPENAI_API_BASE: ${AGENT_OPENAI_API_BASE}
+      OPENAI_API_KEY: ${AGENT_OPENAI_API_KEY:-}
+      MODEL_NAME: ${AGENT_MODEL_NAME}
+    ports:
+      - "${AGENT_PORT:-5000}:5000"
+
   postgres:
     image: postgres:16-alpine
     container_name: aishop-postgres

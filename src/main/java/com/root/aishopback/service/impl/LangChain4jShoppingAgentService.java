@@ -729,7 +729,7 @@ public class LangChain4jShoppingAgentService implements AiShoppingAgentService {
             }
         }
         // Validation is mainly for ambiguous free-text queries.
-        // For explicit intents (e.g. "闂傚倸鍊搁ˇ顖烆敄閸涘瓨鍋?/"闂備礁鍚嬫刊钘夆枍閺囩偐鏀﹂柍?), over-strict lexical validation can drop correct items.
+        // For explicit intents (e.g. "闂傚倸鍊搁崐鎼佀囬鐑嗘晞闁告稑鐡ㄩ崑?/"闂傚倷绀侀崥瀣垔閽樺鏋嶉柡鍥╁亹閺€锕傛煃?), over-strict lexical validation can drop correct items.
         if (intent == IntentType.NONE && !proactiveDbHit) {
             candidates = validateCandidates(effectivePrompt, candidates);
         }
@@ -742,7 +742,7 @@ public class LangChain4jShoppingAgentService implements AiShoppingAgentService {
             candidates = filterByTopicHint(candidates, strictTopicHint);
         }
         if (candidates.isEmpty() && intent != IntentType.NONE) {
-            // Relax validation once for detected intents, so broad asks like "闂傚倸鍊搁崐鎼佸磹閹间礁纾圭€瑰嫭鍣磋ぐ鎺戠倞妞ゆ帒锕︾粙蹇旂節閵忥絾纭炬い鎴濇喘閵嗗懘骞撻幑妤€缍婇幃鈺侇啅椤旂厧澹堢紓鍌欒閸嬫挸顭块懜闈涘闁告瑦鎹囬弻娑㈠Ψ閿濆懎顬夐柣蹇撶箳閺佸寮婚敓鐘插耿妞ゆ挶鍨洪宥夋⒑闁稓鈹掗柛鏂跨焸閳ユ棃宕橀鍛彴闂傚鍋掗崢濂杆夊鑸碘拻闁稿本鐟︾粊鐗堛亜閺囩喓澧电€规洑鍗冲鎾偐閹绘帞浜版繝鐢靛仜濡鍒掗幆褉妲堥柕蹇曞Х椤︺劑姊洪棃娑辩劸闁搞劍妞介敐鐐差吋閸涱亝鏂€濡炪倖姊归弸缁樼瑹濞戙垺鐓曟俊顖氭贡閻瑧鈧娲﹂崹鑸垫叏閳ь剟鏌ｅ鍡椾簼闁哄倵鍋撻梻鍌欒兌缁垶宕濆Ο闂寸剨婵炲棙鎸哥粻娲煟濡吋鏆╃痪鎯у悑閵囧嫰骞囬埡浣轰患闂侀€炲苯澧柣蹇旂箞閹儳鐣￠柇锔藉缓闂侀€炲苯澧寸€规洘妞介弫鎾绘偐閼碱剨绱叉繝娈垮枟閿曗晠宕滃▎鎾? do not drop to empty.
+            // Relax validation once for detected intents, so broad asks like "闂傚倸鍊搁崐鎼佸磹閹间礁纾归柟闂寸绾惧湱鈧懓瀚崳纾嬨亹閹烘垹鍊炲銈嗗笒閿曪妇绮欒箛鏃傜瘈闁靛骏绲剧涵鐐亜閹存繃鍠橀柕鍡楁嚇楠炴捇骞戝Δ鈧紞濠囧箖閳轰緡鍟呮い鏃傚帶婢瑰牏绱撻崒娆掝唹闁稿鎸搁…鍧楁嚋闂堟稑顫庨梺鍛婄懄閹瑰洭寮诲☉銏犖ㄩ柨婵嗘噹椤鏌ｈ箛鎾剁闁轰礁顭峰濠氭晸閻樻彃鑰垮銈嗘尪閸ㄦ椽顢撳澶嬧拺闂侇偅绋撻埞鎺楁煕閺傝法鐒搁柍銉︽瀹曟﹢顢旈崨顓犲酱闂傚倸顭崑鎺楀储婵傛潌澶婎潩閼哥鎷婚梺绋挎湰閻燂妇绮婇悧鍫涗簻闁哄洨鍠撴晶鐢碘偓瑙勬磻閸楀啿顕ｉ幘顔藉亹闁圭粯甯炴禍鐗堢節閻㈤潧浠滄俊顐ｎ殘閸掓帡骞嗚濡插牓鏌曡箛鏇炐ユい锔哄姂濮婃椽妫冨☉杈╁姼闂佹悶鍔嶅浠嬫晲閻愬樊鍚嬮柛娑变簼閺傗偓婵＄偑鍊栧褰掑几缂佹鐟规繛鎴欏灪閻撴洘淇婇姘础闁活厽鐟ч埀顒冾潐濞诧箓宕归懜鍨弿闁逞屽墴閺岋絽顫滈崱妞剧凹闂佸搫鍊甸崑鎾绘⒒閸屾瑨鍏岀紒顕呭灦瀹曟繂螣闂傚鍓ㄥ┑鐐叉閹稿摜绮诲ú顏呯厽婵☆垰鍚嬮弳鈺冪棯閹冩倯闁靛洤瀚伴獮鍥煛娴ｈ桨鎮ｉ梻渚€鈧偛鑻晶顕€鏌ｈ箛鏃傜疄闁诡喗鍎抽悾锟犳焽閿旇棄缂撻梻渚€鈧偛鑻晶瀵糕偓瑙勬礃濡炰粙寮幘缁樺亹闁肩⒈鍓ㄧ槐鍙夌節濞堝灝鏋熼柨鏇楁櫊瀹曟粌鈻庨幘? do not drop to empty.
             candidates = applyConstraints(strictIntentRetrieve(intent).stream().limit(topK * 3L).toList(), constraints);
             candidates = rerankCandidates(effectivePrompt, constraints, candidates, intent).stream().limit(topK).toList();
             if (strictTopicMode) {
@@ -5634,7 +5634,7 @@ public class LangChain4jShoppingAgentService implements AiShoppingAgentService {
         }
         if (containsAny(
             text,
-            "这个", "那个", "这款", "那款", "这件", "那件", "上一批", "上一个", "刚才那个", "按刚才的",
+            "这个", "那个", "这款", "那款", "这件", "那件", "上一条", "上一个", "刚才那个", "按刚才的",
             "this one", "that one", "previous one", "same type", "as before", "based on that"
         )) {
             return true;
@@ -7132,7 +7132,7 @@ public class LangChain4jShoppingAgentService implements AiShoppingAgentService {
         }
         String lowered = prompt.toLowerCase(Locale.ROOT);
 
-        // 1) Explicit quantity labels should always win, e.g. "鏁伴噺 2", "qty: 3".
+        // 1) Explicit quantity labels should always win, e.g. "閺佷即鍣?2", "qty: 3".
         Matcher labeled = QUANTITY_LABELED_PATTERN.matcher(lowered);
         if (labeled.find()) {
             try {
@@ -7150,7 +7150,7 @@ public class LangChain4jShoppingAgentService implements AiShoppingAgentService {
             }
         }
 
-        // 3) Unit count phrase, e.g. "2涓?2浠?.
+        // 3) Unit count phrase, e.g. "2娑?2娴?.
         Matcher countMatcher = COUNT_PATTERN.matcher(lowered);
         if (countMatcher.find()) {
             try {
@@ -7556,7 +7556,9 @@ public class LangChain4jShoppingAgentService implements AiShoppingAgentService {
 
             String instruction = "\u4f60\u662f\u7535\u5546\u8d2d\u7269\u52a9\u624b\u3002\u4ec5\u57fa\u4e8e\u5019\u9009\u5546\u54c1\u56de\u7b54\uff0c\u4f7f\u7528\u7b80\u4f53\u4e2d\u6587\uff0c\u7b80\u6d01\u660e\u786e\u3002"
                 + "\u8f93\u51fa\u4f7f\u7528\u666e\u901a Markdown\uff1a\u53ef\u4ee5\u7528\u6bb5\u843d\u3001\u77ed\u5217\u8868\u3001\u6362\u884c\uff0c"
-                + "\u4e0d\u8981\u5199 **\u52a0\u7c97\u6807\u9898**\uff0c\u4e0d\u8981\u6bcf\u6bb5\u90fd\u7528\u52a0\u7c97\u5305\u88f9\u3002";
+                + "\u4e0d\u8981\u5199 **\u52a0\u7c97\u6807\u9898**\uff0c\u4e0d\u8981\u6bcf\u6bb5\u90fd\u7528\u52a0\u7c97\u5305\u88f9\u3002"
+                + "\u82e5\u9700\u5217\u51fa\u5019\u9009\uff0c\u5fc5\u987b\u4e00\u884c\u4e00\u4e2a\u5546\u54c1 ID\uff0c\u7981\u6b62\u4e00\u884c\u591a ID\uff08\u4f8b\u5982 ID 1 / 2\uff09\uff0c"
+                + "\u4e14\u5217\u51fa\u7684\u5546\u54c1\u6570\u5fc5\u987b\u4e0e Candidates \u6570\u91cf\u5b8c\u5168\u4e00\u81f4\u3002";
             String fullPrompt = instruction
                 + "\n\nUser input:\n" + nvl(prompt)
                 + "\n\nCandidates:\n" + context
@@ -7582,7 +7584,32 @@ public class LangChain4jShoppingAgentService implements AiShoppingAgentService {
         if (candidateIds.isEmpty()) {
             return true;
         }
-        Matcher matcher = Pattern.compile("(?i)\\bID\\s*[:=：]?\\s*(\\d+)\\b").matcher(reply);
+
+        Pattern idPattern = Pattern.compile("(?i)(?:\\bID\\b|\\u5546\\u54c1\\s*ID)\\s*[:=\\uff1a]?\\s*(\\d+)");
+        Set<Long> mentionedIds = new LinkedHashSet<>();
+
+        String[] lines = reply.replace("\r\n", "\n").split("\n");
+        for (String line : lines) {
+            if (line == null || line.isBlank()) {
+                continue;
+            }
+            Matcher lineMatcher = idPattern.matcher(line);
+            int idCountInLine = 0;
+            while (lineMatcher.find()) {
+                idCountInLine++;
+                try {
+                    mentionedIds.add(Long.parseLong(lineMatcher.group(1)));
+                } catch (Exception ignored) {
+                    // ignore parse failures
+                }
+            }
+            // prevent one text row from mentioning multiple cards (e.g. ID 1 / 2)
+            if (idCountInLine > 1) {
+                return false;
+            }
+        }
+
+        Matcher matcher = idPattern.matcher(reply);
         while (matcher.find()) {
             Long id;
             try {
@@ -7594,9 +7621,12 @@ public class LangChain4jShoppingAgentService implements AiShoppingAgentService {
                 return false;
             }
         }
+
+        if (!mentionedIds.isEmpty() && mentionedIds.size() != candidateIds.size()) {
+            return false;
+        }
         return true;
     }
-
     private String toDocumentText(ProductVO p) {
         return "[PRODUCT_ID=" + p.getId() + "] "
             + "name: " + nvl(p.getName()) + "; "
@@ -8108,7 +8138,7 @@ public class LangChain4jShoppingAgentService implements AiShoppingAgentService {
         if (!alt.isEmpty()) {
             return new FreshResult(alt, "\u5df2\u4f18\u5148\u4e3a\u4f60\u6362\u4e00\u6279\u4e0d\u91cd\u590d\u7684\u5019\u9009\u3002");
         }
-        // For follow-up like "杩樻湁鍚?, do not fallback to repeated old batch.
+        // For follow-up like "鏉╂ɑ婀侀崥?, do not fallback to repeated old batch.
         return new FreshResult(List.of(), "\u57fa\u4e8e\u4f60\u4e0a\u4e00\u8f6e\u7684\u4e3b\u9898\uff0c\u6682\u65f6\u6ca1\u627e\u5230\u66f4\u591a\u4e0d\u91cd\u590d\u7684\u540c\u7c7b\u5546\u54c1\u3002");
     }
 
@@ -8281,7 +8311,7 @@ public class LangChain4jShoppingAgentService implements AiShoppingAgentService {
             terms.add(token);
         }
 
-        // Add short CJK n-grams so phrases like "闂備胶鎳撻悺銊╁垂婵傛悶鈧懘鏁傞悾灞告灆闂佺懓鍢查惌鍫濐焽閸洘鍊? still hit "闂佽崵鍋為崙褰掑磻閸曨垱鍋?.
+        // Add short CJK n-grams so phrases like "闂傚倷鑳堕幊鎾绘偤閵娾晛鍨傚┑鍌涙偠閳ь剙鎳橀弫鍌炴偩鐏炲憡鐏嗛梻浣烘嚀閸㈡煡鎯岄崼婵愮劷闁割偅娲橀崐? still hit "闂備浇宕甸崑鐐哄礄瑜版帒纾婚柛鏇ㄥ灡閸?.
         String compactCjk = lowered.replaceAll("\\s+", "");
         if (containsCjk(compactCjk) && compactCjk.length() >= 2) {
             for (int n = 2; n <= 3; n++) {
@@ -8731,6 +8761,7 @@ public class LangChain4jShoppingAgentService implements AiShoppingAgentService {
         }
     }
 }
+
 
 
 

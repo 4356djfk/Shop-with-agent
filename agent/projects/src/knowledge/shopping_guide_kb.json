@@ -1,0 +1,87 @@
+﻿{
+  "meta": {
+    "name": "shopping_guide_kb",
+    "version": "1.1.0",
+    "max_guidance_rounds": 5
+  },
+  "global_rules": {
+    "required_slots": [
+      "category_or_scene",
+      "budget",
+      "core_preference"
+    ],
+    "stage_actions": {
+      "1": "优先收集能直接缩小候选的关键条件。",
+      "2": "停止泛问，直接给推荐结果。"
+    },
+    "output_rules": [
+      "信息足够时直接给商品，不要继续追问。",
+      "用户已给品类时，不要再问想买什么。",
+      "每轮最多一个问题，避免问卷式交互。"
+    ],
+    "search_guardrails": [
+      "一轮最多一次主搜索。",
+      "优先按用户最新条件重搜。",
+      "无意义重复确认时应立即停止追问并推荐。"
+    ]
+  },
+  "topics": [
+    {
+      "id": "shoes",
+      "keywords": ["鞋", "鞋子", "跑鞋", "板鞋", "皮鞋", "凉鞋", "靴子", "shoe", "sneaker", "boots"],
+      "high_value_questions": [
+        "主要场景是通勤、运动还是日常穿搭？",
+        "预算大概多少？",
+        "是否有尺码或颜色偏好？"
+      ],
+      "search_hints": {
+        "keywords": ["鞋", "舒适", "透气", "防滑"],
+        "sort_by": "sales_desc"
+      },
+      "must_match_factors": ["size", "comfort", "usage"]
+    },
+    {
+      "id": "headphones",
+      "keywords": ["耳机", "蓝牙耳机", "降噪", "headphone", "earbuds", "tws"],
+      "high_value_questions": [
+        "更看重降噪、音质还是续航？",
+        "预算范围是多少？",
+        "偏好入耳式还是头戴式？"
+      ],
+      "search_hints": {
+        "keywords": ["耳机", "蓝牙", "降噪", "续航"],
+        "sort_by": "sales_desc"
+      },
+      "must_match_factors": ["noise_canceling", "battery", "wear_type"]
+    },
+    {
+      "id": "snacks",
+      "keywords": ["零食", "小吃", "夜宵", "坚果", "饼干", "snack", "food"],
+      "high_value_questions": [
+        "偏好辣味、甜味、咸香还是低脂健康？",
+        "预算大概多少？",
+        "有无过敏或忌口？"
+      ],
+      "search_hints": {
+        "keywords": ["零食", "即食", "口味", "热销"],
+        "sort_by": "sales_desc"
+      },
+      "must_match_factors": ["taste", "dietary_restriction", "price"]
+    },
+    {
+      "id": "dress",
+      "keywords": ["连衣裙", "裙子", "dress", "one-piece"],
+      "high_value_questions": [
+        "通勤、约会还是正式场景穿？",
+        "预算和尺码是？",
+        "偏好版型和颜色吗？"
+      ],
+      "search_hints": {
+        "keywords": ["连衣裙", "显瘦", "通勤", "气质"],
+        "sort_by": "sales_desc"
+      },
+      "must_match_factors": ["size", "fit", "occasion"]
+    }
+  ]
+}
+
