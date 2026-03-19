@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -24,6 +25,12 @@ import java.util.regex.Pattern;
 public class ShopProductServiceImpl implements ShopProductService {
     private static final Pattern AMAZON_RENDERING_PATH =
         Pattern.compile("https?://m\\.media-amazon\\.com/images/W/[^/]+/images/", Pattern.CASE_INSENSITIVE);
+    private static final Pattern SEARCH_SPLIT_PATTERN = Pattern.compile("[\\s,，;；|/+]+");
+    private static final Pattern CN_CONNECTOR_PATTERN = Pattern.compile("[的了和与及]");
+    private static final Set<String> SEARCH_STOP_WORDS = Set.of(
+        "商品", "推荐", "我要", "我想买", "买", "一下", "来点", "给我", "热销", "好吃", "的", "了"
+    );
+    private static final Map<String, List<String>> SEARCH_ALIASES = createSearchAliases();
 
     private final ProductMapper productMapper;
 
@@ -51,6 +58,11 @@ public class ShopProductServiceImpl implements ShopProductService {
         query.last("LIMIT " + safeSize + " OFFSET " + ((safePage - 1) * safeSize));
 
         List<Product> products = productMapper.selectList(query);
+        if (products.isEmpty() && keyword != null && !keyword.isBlank()) {
+            // Fallback: retry with expanded/splitted terms to improve recall.
+            products = fallbackSearchProducts(category, keyword, sortBy, safePage, safeSize);
+            total = products.size();
+        }
         if (products.isEmpty()) {
             return Map.of(
                 "list", Collections.emptyList(),
@@ -195,20 +207,145 @@ public class ShopProductServiceImpl implements ShopProductService {
 
     private void applyFilters(LambdaQueryWrapper<Product> query, String category, String keyword) {
         query.eq(Product::getIsActive, true);
-        if (keyword != null && !keyword.isBlank()) {
-            query.and(w -> w
-                .like(Product::getName, keyword)
-                .or().like(Product::getCategory, keyword)
-                .or().like(Product::getBrand, keyword)
-                .or().like(Product::getDescription, keyword)
-            );
+        List<String> keywordTerms = expandSearchTerms(keyword);
+        if (!keywordTerms.isEmpty()) {
+            query.and(w -> {
+                boolean first = true;
+                for (String term : keywordTerms) {
+                    if (!first) {
+                        w.or();
+                    }
+                    w.like(Product::getName, term)
+                        .or().like(Product::getCategory, term)
+                        .or().like(Product::getBrand, term)
+                        .or().like(Product::getDescription, term);
+                    first = false;
+                }
+            });
         }
-        if (category != null && !category.isBlank()) {
-            query.and(w -> w
-                .like(Product::getCategory, category)
-                .or().like(Product::getDescription, category)
-            );
+        List<String> categoryTerms = expandSearchTerms(category);
+        if (!categoryTerms.isEmpty()) {
+            query.and(w -> {
+                boolean first = true;
+                for (String term : categoryTerms) {
+                    if (!first) {
+                        w.or();
+                    }
+                    w.like(Product::getCategory, term)
+                        .or().like(Product::getDescription, term);
+                    first = false;
+                }
+            });
         }
+    }
+
+    private List<Product> fallbackSearchProducts(String category, String keyword, String sortBy, int page, int size) {
+        LinkedHashMap<Long, Product> merged = new LinkedHashMap<>();
+        List<String> terms = expandSearchTerms(keyword);
+        int offset = (page - 1) * size;
+
+        for (String term : terms) {
+            LambdaQueryWrapper<Product> retry = new LambdaQueryWrapper<>();
+            applyFilters(retry, category, term);
+            applySort(retry, sortBy);
+            retry.last("LIMIT " + Math.max(size * 2, size + offset) + " OFFSET 0");
+            List<Product> batch = productMapper.selectList(retry);
+            for (Product p : batch) {
+                if (p.getId() != null) {
+                    merged.putIfAbsent(p.getId(), p);
+                }
+            }
+            if (merged.size() >= offset + size) {
+                break;
+            }
+        }
+
+        if (merged.isEmpty() && category != null && !category.isBlank()) {
+            for (String term : terms) {
+                LambdaQueryWrapper<Product> retry = new LambdaQueryWrapper<>();
+                applyFilters(retry, null, term);
+                applySort(retry, sortBy);
+                retry.last("LIMIT " + Math.max(size * 2, size + offset) + " OFFSET 0");
+                List<Product> batch = productMapper.selectList(retry);
+                for (Product p : batch) {
+                    if (p.getId() != null) {
+                        merged.putIfAbsent(p.getId(), p);
+                    }
+                }
+                if (merged.size() >= offset + size) {
+                    break;
+                }
+            }
+        }
+
+        List<Product> out = new ArrayList<>(merged.values());
+        if (out.isEmpty()) {
+            return out;
+        }
+        int from = Math.min(offset, out.size());
+        int to = Math.min(from + size, out.size());
+        return out.subList(from, to);
+    }
+
+    private List<String> expandSearchTerms(String text) {
+        if (text == null || text.isBlank()) {
+            return List.of();
+        }
+        String raw = text.trim();
+        LinkedHashSet<String> terms = new LinkedHashSet<>();
+        terms.add(raw);
+
+        String compact = raw.replaceAll("\\s+", "");
+        if (!compact.isBlank()) {
+            terms.add(compact);
+        }
+
+        String lower = compact.toLowerCase(Locale.ROOT);
+        List<String> aliases = SEARCH_ALIASES.get(lower);
+        if (aliases != null) {
+            terms.addAll(aliases);
+        }
+
+        for (String part : SEARCH_SPLIT_PATTERN.split(raw)) {
+            addUsefulTerm(terms, part);
+        }
+        for (String part : CN_CONNECTOR_PATTERN.split(raw)) {
+            addUsefulTerm(terms, part);
+        }
+        return new ArrayList<>(terms);
+    }
+
+    private void addUsefulTerm(Set<String> collector, String token) {
+        if (token == null) {
+            return;
+        }
+        String t = token.trim();
+        if (t.length() <= 1) {
+            return;
+        }
+        String lower = t.toLowerCase(Locale.ROOT);
+        if (SEARCH_STOP_WORDS.contains(lower)) {
+            return;
+        }
+        collector.add(t);
+        List<String> aliases = SEARCH_ALIASES.get(lower);
+        if (aliases != null && !aliases.isEmpty()) {
+            collector.addAll(aliases);
+        }
+    }
+
+    private static Map<String, List<String>> createSearchAliases() {
+        Map<String, List<String>> m = new HashMap<>();
+        m.put("snack", List.of("零食", "辣条", "魔芋", "豆干", "卤味"));
+        m.put("snacks", List.of("零食", "辣条", "魔芋", "豆干", "卤味"));
+        m.put("headphone", List.of("耳机", "蓝牙耳机", "降噪耳机"));
+        m.put("headphones", List.of("耳机", "蓝牙耳机", "降噪耳机"));
+        m.put("shoe", List.of("鞋", "鞋子", "运动鞋", "跑鞋"));
+        m.put("shoes", List.of("鞋", "鞋子", "运动鞋", "跑鞋"));
+        m.put("dress", List.of("连衣裙", "裙子"));
+        m.put("shirt", List.of("衬衫"));
+        m.put("shirts", List.of("衬衫"));
+        return m;
     }
 
     private String stringify(Object value) {
