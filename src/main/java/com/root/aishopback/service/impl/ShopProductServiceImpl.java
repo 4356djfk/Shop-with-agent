@@ -9,6 +9,7 @@ import com.root.aishopback.vo.ProductVO;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -54,14 +55,26 @@ public class ShopProductServiceImpl implements ShopProductService {
 
         int safePage = Math.max(page, 1);
         int safeSize = Math.max(Math.min(size, 100), 1);
+        boolean keywordSearch = keyword != null && !keyword.isBlank();
         long total = productMapper.selectCount(countQuery);
-        query.last("LIMIT " + safeSize + " OFFSET " + ((safePage - 1) * safeSize));
+        if (keywordSearch) {
+            int candidateFetchSize = Math.min(800, Math.max(120, safePage * safeSize * 6));
+            query.last("LIMIT " + candidateFetchSize + " OFFSET 0");
+        } else {
+            query.last("LIMIT " + safeSize + " OFFSET " + ((safePage - 1) * safeSize));
+        }
 
         List<Product> products = productMapper.selectList(query);
-        if (products.isEmpty() && keyword != null && !keyword.isBlank()) {
+        if (products.isEmpty() && keywordSearch) {
             // Fallback: retry with expanded/splitted terms to improve recall.
             products = fallbackSearchProducts(category, keyword, sortBy, safePage, safeSize);
-            total = products.size();
+            total = Math.max(total, products.size());
+        }
+        if (keywordSearch && !products.isEmpty()) {
+            products = rerankProducts(products, keyword, sortBy);
+            int from = Math.min((safePage - 1) * safeSize, products.size());
+            int to = Math.min(from + safeSize, products.size());
+            products = products.subList(from, to);
         }
         if (products.isEmpty()) {
             return Map.of(
@@ -242,20 +255,20 @@ public class ShopProductServiceImpl implements ShopProductService {
     private List<Product> fallbackSearchProducts(String category, String keyword, String sortBy, int page, int size) {
         LinkedHashMap<Long, Product> merged = new LinkedHashMap<>();
         List<String> terms = expandSearchTerms(keyword);
-        int offset = (page - 1) * size;
+        int targetPoolSize = Math.max(size * 6, 120);
 
         for (String term : terms) {
             LambdaQueryWrapper<Product> retry = new LambdaQueryWrapper<>();
             applyFilters(retry, category, term);
             applySort(retry, sortBy);
-            retry.last("LIMIT " + Math.max(size * 2, size + offset) + " OFFSET 0");
+            retry.last("LIMIT " + targetPoolSize + " OFFSET 0");
             List<Product> batch = productMapper.selectList(retry);
             for (Product p : batch) {
                 if (p.getId() != null) {
                     merged.putIfAbsent(p.getId(), p);
                 }
             }
-            if (merged.size() >= offset + size) {
+            if (merged.size() >= targetPoolSize) {
                 break;
             }
         }
@@ -265,27 +278,69 @@ public class ShopProductServiceImpl implements ShopProductService {
                 LambdaQueryWrapper<Product> retry = new LambdaQueryWrapper<>();
                 applyFilters(retry, null, term);
                 applySort(retry, sortBy);
-                retry.last("LIMIT " + Math.max(size * 2, size + offset) + " OFFSET 0");
+                retry.last("LIMIT " + targetPoolSize + " OFFSET 0");
                 List<Product> batch = productMapper.selectList(retry);
                 for (Product p : batch) {
                     if (p.getId() != null) {
                         merged.putIfAbsent(p.getId(), p);
                     }
                 }
-                if (merged.size() >= offset + size) {
+                if (merged.size() >= targetPoolSize) {
                     break;
                 }
             }
         }
-
-        List<Product> out = new ArrayList<>(merged.values());
-        if (out.isEmpty()) {
-            return out;
-        }
-        int from = Math.min(offset, out.size());
-        int to = Math.min(from + size, out.size());
-        return out.subList(from, to);
+        return new ArrayList<>(merged.values());
     }
+
+    private List<Product> rerankProducts(List<Product> products, String keyword, String sortBy) {
+        if (products == null || products.isEmpty()) {
+            return List.of();
+        }
+        List<String> terms = expandSearchTerms(keyword);
+        List<ScoredProduct> scored = new ArrayList<>();
+        for (Product p : products) {
+            scored.add(new ScoredProduct(p, scoreProductRelevance(p, terms)));
+        }
+        Comparator<ScoredProduct> cmp = Comparator.comparingDouble(ScoredProduct::score).reversed();
+        if ("price_asc".equals(sortBy)) {
+            cmp = cmp.thenComparing(sp -> sp.product().getPrice(), Comparator.nullsLast(Comparator.naturalOrder()));
+        } else if ("price_desc".equals(sortBy)) {
+            cmp = cmp.thenComparing(sp -> sp.product().getPrice(), Comparator.nullsLast(Comparator.reverseOrder()));
+        } else if ("rating".equals(sortBy)) {
+            cmp = cmp.thenComparing(sp -> sp.product().getRating(), Comparator.nullsLast(Comparator.reverseOrder()));
+        }
+        cmp = cmp
+            .thenComparing(sp -> sp.product().getSales(), Comparator.nullsLast(Comparator.reverseOrder()))
+            .thenComparing(sp -> sp.product().getId(), Comparator.nullsLast(Comparator.reverseOrder()));
+        scored.sort(cmp);
+        return scored.stream().map(ScoredProduct::product).toList();
+    }
+
+    private double scoreProductRelevance(Product p, List<String> terms) {
+        String name = nvl(p.getName()).toLowerCase(Locale.ROOT);
+        String category = nvl(p.getCategory()).toLowerCase(Locale.ROOT);
+        String brand = nvl(p.getBrand()).toLowerCase(Locale.ROOT);
+        String desc = nvl(p.getDescription()).toLowerCase(Locale.ROOT);
+        double score = 0.0;
+        for (String t : terms) {
+            String term = nvl(t).toLowerCase(Locale.ROOT).trim();
+            if (term.isBlank()) {
+                continue;
+            }
+            if (name.equals(term)) score += 12;
+            else if (name.contains(term)) score += 8;
+            if (category.contains(term)) score += 5;
+            if (brand.contains(term)) score += 3;
+            if (desc.contains(term)) score += 2;
+        }
+        if (p.getStock() != null && p.getStock() > 0) score += 1;
+        if (p.getSales() != null) score += Math.min(5.0, p.getSales() / 2000.0);
+        if (p.getRating() != null) score += Math.min(2.5, p.getRating().doubleValue() / 2.0);
+        return score;
+    }
+
+    private record ScoredProduct(Product product, double score) {}
 
     private List<String> expandSearchTerms(String text) {
         if (text == null || text.isBlank()) {
